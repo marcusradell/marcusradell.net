@@ -28,7 +28,7 @@
     "test": "jest",
     "build": "tsc",
     "start": "node lib/cmd/server.js",
-    "dev": "nodemon src/cmd/server.ts"
+    "dev": "nodemon src/cmd/server.tsx"
   },
   "repository": {
     "type": "git",

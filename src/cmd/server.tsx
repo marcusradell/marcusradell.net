@@ -27,7 +27,7 @@ function run() {
   app.get("/static", express.static("lib/client"));
 
   app.get("/", (req, res) => {
-    res.send(ReactDOMServer.renderToString(<div>Hello world!</div>));
+    ReactDOMServer.renderToNodeStream(<div>Hello world!!</div>).pipe(res);
   });
 
   const server = http.createServer(app);
@@ -68,16 +68,15 @@ function run() {
   log("Validating DB connection.");
   db.any(`select (1 + 1)`)
     .then(() => log("DB is ready."))
-    .then(() => {
-      app.listen(process.env.PORT, () => {
-        log(`Server started on port <${process.env.PORT}>.`);
-        main(log, db);
-      });
-    })
     .catch(e => {
       log(e);
       process.exit(-1);
     });
+
+  app.listen(process.env.PORT, () => {
+    log(`Server started on port <${process.env.PORT}>.`);
+    main(log, db);
+  });
 }
 
 run();
