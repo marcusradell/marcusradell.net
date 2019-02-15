@@ -1,5 +1,6 @@
 {
   "watch": ["src"],
-  "extensions": ["ts", "tsx"],
-  "exec": "ts-node"
+  "ext": "ts,tsx",
+  "ignore": ["src/**/*.test.ts"],
+  "exec": "ts-node ./src/cmd/server.tsx"
 }

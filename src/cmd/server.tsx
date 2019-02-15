@@ -27,7 +27,7 @@ function run() {
   app.get("/static", express.static("lib/client"));
 
   app.get("/", (req, res) => {
-    ReactDOMServer.renderToNodeStream(<div>Hello world!!</div>).pipe(res);
+    ReactDOMServer.renderToNodeStream(<div>Hello world!</div>).pipe(res);
   });
 
   const server = http.createServer(app);
