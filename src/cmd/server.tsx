@@ -4,7 +4,10 @@ import { Subject } from "rxjs";
 import dotenv from "dotenv";
 import { IMain, IDatabase } from "pg-promise";
 import pgPromise from "pg-promise";
-import bodyParser = require("body-parser");
+import * as WebSocket from "ws";
+import * as http from "http";
+import React from "react";
+import ReactDOMServer from "react-dom/server";
 
 function run() {
   dotenv.config();
@@ -20,10 +23,35 @@ function run() {
   }
 
   const app = express();
-  app.use(bodyParser.json());
 
-  app.post("api/command", (req, res) => {});
-  app.get("api/query", (req, res) => {});
+  app.get("/static", express.static("lib/client"));
+
+  app.get("/", (req, res) => {
+    res.send(ReactDOMServer.renderToString(<div>Hello world!</div>));
+  });
+
+  const server = http.createServer(app);
+  const wss = new WebSocket.Server({ server });
+
+  wss.on("connection", (ws: WebSocket) => {
+    ws.on("message", (message: string) => {
+      log(`Recieved message: <${message}>.`);
+      wss.clients.forEach(c => {
+        if (c === ws) {
+          log("c === ws");
+          return;
+        }
+        if (c == ws) {
+          log("c == ws");
+          return;
+        }
+        c.send(JSON.stringify({ type: "message", payload: message }));
+      });
+      ws.send(JSON.stringify({ type: "message->succeeded", payload: message }));
+    });
+
+    ws.send(JSON.stringify({ type: "ws.connect->succeeded" }));
+  });
 
   if (process.env.PORT === undefined) {
     throw new Error("Missing port value.");
@@ -37,6 +65,7 @@ function run() {
 
   const db: IDatabase<any> = pgp(process.env.DB_CONNECTION);
 
+  log("Validating DB connection.");
   db.any(`select (1 + 1)`)
     .then(() => log("DB is ready."))
     .then(() => {
