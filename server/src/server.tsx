@@ -6,9 +6,6 @@ import { IMain, IDatabase } from "pg-promise";
 import pgPromise from "pg-promise";
 import * as WebSocket from "ws";
 import * as http from "http";
-import React from "react";
-import ReactDOMServer from "react-dom/server";
-import { Html } from "../components/html";
 
 function run() {
   dotenv.config();
