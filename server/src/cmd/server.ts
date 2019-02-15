@@ -1,11 +1,8 @@
-import express from "express";
-import { main } from "../server";
 import { Subject } from "rxjs";
 import dotenv from "dotenv";
 import { IMain, IDatabase } from "pg-promise";
 import pgPromise from "pg-promise";
-import * as WebSocket from "ws";
-import * as http from "http";
+import WebSocket from "ws";
 
 function run() {
   dotenv.config();
@@ -20,23 +17,11 @@ function run() {
     logSubject.next(s);
   }
 
-  const app = express();
+  if (process.env.PORT === undefined) {
+    throw new Error("Missing port value.");
+  }
 
-  app.use("/static", express.static("lib/client"));
-
-  app.get("/", (req, res) => {
-    ReactDOMServer.renderToNodeStream(
-      <Html>
-        <div>TODO!</div>
-      </Html>
-    ).pipe(res);
-  });
-
-  const server = http.createServer(app);
-
-  // const wss = new WebSocket.Server({ server });
-
-  const wss = new WebSocket.Server({ port: 8080 });
+  const wss = new WebSocket.Server({ port: parseInt(process.env.PORT, 10) });
 
   wss.on("connection", (ws: WebSocket) => {
     ws.on("message", (message: string) => {
@@ -44,10 +29,6 @@ function run() {
       wss.clients.forEach(c => {
         if (c === ws) {
           log("c === ws");
-          return;
-        }
-        if (c == ws) {
-          log("c == ws");
           return;
         }
         c.send(JSON.stringify({ type: "message", payload: message }));
@@ -73,15 +54,6 @@ function run() {
       log(e);
       process.exit(-1);
     });
-
-  if (process.env.PORT === undefined) {
-    throw new Error("Missing port value.");
-  }
-
-  app.listen(process.env.PORT, () => {
-    log(`Server started on port <${process.env.PORT}>.`);
-    main(log, db);
-  });
 }
 
 run();
