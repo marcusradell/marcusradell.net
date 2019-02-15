@@ -1,5 +1,5 @@
 import express from "express";
-import { main } from "../main";
+import { main } from "../server";
 import { Subject } from "rxjs";
 import dotenv from "dotenv";
 import { IMain, IDatabase } from "pg-promise";
@@ -8,6 +8,7 @@ import * as WebSocket from "ws";
 import * as http from "http";
 import React from "react";
 import ReactDOMServer from "react-dom/server";
+import { Html } from "../components/html";
 
 function run() {
   dotenv.config();
@@ -24,14 +25,21 @@ function run() {
 
   const app = express();
 
-  app.get("/static", express.static("lib/client"));
+  app.use("/static", express.static("lib/client"));
 
   app.get("/", (req, res) => {
-    ReactDOMServer.renderToNodeStream(<div>Hello world!</div>).pipe(res);
+    ReactDOMServer.renderToNodeStream(
+      <Html>
+        <div>TODO!</div>
+      </Html>
+    ).pipe(res);
   });
 
   const server = http.createServer(app);
-  const wss = new WebSocket.Server({ server });
+
+  // const wss = new WebSocket.Server({ server });
+
+  const wss = new WebSocket.Server({ port: 8080 });
 
   wss.on("connection", (ws: WebSocket) => {
     ws.on("message", (message: string) => {
@@ -53,10 +61,6 @@ function run() {
     ws.send(JSON.stringify({ type: "ws.connect->succeeded" }));
   });
 
-  if (process.env.PORT === undefined) {
-    throw new Error("Missing port value.");
-  }
-
   const pgp: IMain = pgPromise();
 
   if (process.env.DB_CONNECTION === undefined) {
@@ -72,6 +76,10 @@ function run() {
       log(e);
       process.exit(-1);
     });
+
+  if (process.env.PORT === undefined) {
+    throw new Error("Missing port value.");
+  }
 
   app.listen(process.env.PORT, () => {
     log(`Server started on port <${process.env.PORT}>.`);
