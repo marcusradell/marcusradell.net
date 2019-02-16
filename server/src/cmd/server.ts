@@ -1,43 +1,20 @@
-import { Subject } from "rxjs";
 import dotenv from "dotenv";
 import { IMain, IDatabase } from "pg-promise";
 import pgPromise from "pg-promise";
-import WebSocket from "ws";
+import { Logger } from "../services/log";
+import uuid from "uuid/v4";
+import { WebSocketServer } from "../services/web-socket-server";
 
 function run() {
   dotenv.config();
-  const logSubject = new Subject<string>();
+  const bootstrapCid = uuid();
 
-  logSubject
+  const logger = new Logger();
+  logger
+    .getLog()
     .forEach(s => console.log(s))
     .then(() => console.log("logSubject completed."))
     .catch(e => console.error(e));
-
-  function log(s: string) {
-    logSubject.next(s);
-  }
-
-  if (process.env.PORT === undefined) {
-    throw new Error("Missing port value.");
-  }
-
-  const wss = new WebSocket.Server({ port: parseInt(process.env.PORT, 10) });
-
-  wss.on("connection", (ws: WebSocket) => {
-    ws.on("message", (message: string) => {
-      log(`Recieved message: <${message}>.`);
-      wss.clients.forEach(c => {
-        if (c === ws) {
-          log("c === ws");
-          return;
-        }
-        c.send(JSON.stringify({ type: "message", payload: message }));
-      });
-      ws.send(JSON.stringify({ type: "message->succeeded", payload: message }));
-    });
-
-    ws.send(JSON.stringify({ type: "ws.connect->succeeded" }));
-  });
 
   const pgp: IMain = pgPromise();
 
@@ -47,13 +24,19 @@ function run() {
 
   const db: IDatabase<any> = pgp(process.env.DB_CONNECTION);
 
-  log("Validating DB connection.");
+  logger.info("Validating DB connection.", bootstrapCid);
   db.any(`select (1 + 1)`)
-    .then(() => log("DB is ready."))
+    .then(() => logger.info("DB is ready.", bootstrapCid))
     .catch(e => {
-      log(e);
+      logger.error(e, bootstrapCid);
       process.exit(-1);
     });
+
+  if (process.env.PORT === undefined) {
+    throw new Error("Missing port value.");
+  }
+
+  const wss = new WebSocketServer(parseInt(process.env.PORT, 10));
 }
 
 run();
