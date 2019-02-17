@@ -1,28 +1,41 @@
-import React, { Component } from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useReducer } from "react";
 
-class App extends Component {
-  render() {
-    return (
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            Edit <code>src/App.tsx</code> and save to reload.
-          </p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
-        </header>
-      </div>
-    );
+type State = {
+  value: string;
+};
+
+type Action = {
+  type: string;
+  payload: string;
+};
+
+const initialState: State = {
+  value: ""
+};
+
+function reducer(state: State, action: Action) {
+  switch (action.type) {
+    case "set_value":
+      return { ...state, value: action.payload };
+    default:
+      throw new Error("No such action type.");
   }
 }
 
-export default App;
+export function App() {
+  const [state, dispatch] = useReducer(reducer, initialState);
+
+  function onChange(e: React.ChangeEvent<HTMLInputElement>) {
+    dispatch({
+      type: "set_value",
+      payload: e.target.value
+    });
+  }
+
+  return (
+    <>
+      <input value={state.value} onChange={onChange} />
+      {JSON.stringify(state)}
+    </>
+  );
+}
