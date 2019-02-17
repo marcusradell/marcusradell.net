@@ -1,59 +1,76 @@
 import { Subject, merge, Observable } from "rxjs";
 import { map } from "rxjs/operators";
 
-type Reducer<T, S> = (event: T) => (state: S) => S;
+type Updater<S> = (state: S) => S;
 
-type MachineNode = {
-  trigger: Trigger;
-  stream: Observable<any>;
-  updater: Observable<any>;
+type Reducer<E, S> = (event: E) => Updater<S>;
+
+// TODO: Get rid of the any type.
+type Reducers<S> = { [s: string]: Reducer<any, S> };
+
+type Trigger<E> = (x: E) => void;
+
+type MachineNodeAction<E, S> = {
+  trigger: Trigger<E>;
+  stream: Observable<E>;
+  updater: Observable<Updater<S>>;
 };
 
-function machineNode(reducer): MachineNode {
-  const subject = new Subject();
+function machineNodeAction<E, S>(
+  reducer: Reducer<E, S>
+): MachineNodeAction<E, S> {
+  const subject = new Subject<E>();
 
-  function trigger(x) {
+  function trigger(x: E) {
     subject.next(x);
   }
 
   const stream = subject.asObservable();
-  const updater = subject.pipe(map(x => reducer(x)));
+  const updater = subject.pipe(map<E, Updater<S>>((x: E) => reducer(x)));
 
-  return { trigger, stream, updater };
+  const result: MachineNodeAction<E, S> = { trigger, stream, updater };
+
+  return result;
 }
 
-type Reducers = { [s: string]: Reducer<any, any> };
-
-type machineReducers = {
-  [s: string]: Reducers;
+type MachineReducers<S> = {
+  [s: string]: Reducers<S>;
 };
 
-type Trigger = (x: any) => void;
-
-type SubMachine = {
-  [actions: string]: MachineNode;
+type MachineNode<S> = {
+  actions: {
+    [s: string]: MachineNodeAction<any, S>;
+  };
+  updater: Observable<any>;
 };
 
 type Machine = {
-  [s: string]: SubMachine;
+  [s: string]: MachineNode<any>;
 };
 
-function subMachine(reducers: Reducers): SubMachine {
-  const subMachine: SubMachine = Object.keys(reducers).reduce(
-    (sm: SubMachine, k: string) => {
-      sm[k] = machineNode(reducers[k]);
-      return sm;
-    },
-    {} as SubMachine
-  );
-  return subMachine;
+function machineNodeUpdater<S>(mn: MachineNode<S>): Observable<Updater<S>> {
+  return merge(...Object.values(mn.actions).map(x => x.updater));
 }
 
-export function machine(machineReducers: machineReducers): Machine {
+function machineNode<S>(reducers: Reducers<S>): MachineNode<S> {
+  let result: MachineNode<S> = Object.keys(reducers).reduce(
+    (mn: MachineNode<S>, k: string) => {
+      mn.actions[k] = machineNodeAction(reducers[k]);
+      return mn;
+    },
+    { actions: {} } as MachineNode<S>
+  );
+
+  result.updater = machineNodeUpdater<S>(result);
+
+  return result;
+}
+
+export function machine(machineReducers: MachineReducers<any>): Machine {
   const machine: Machine = Object.keys(machineReducers).reduce(
     (m: Machine, k: string) => {
       const reducers = machineReducers[k];
-      m[k] = subMachine(reducers);
+      m[k] = machineNode(reducers);
       return m;
     },
     {} as Machine
@@ -61,28 +78,3 @@ export function machine(machineReducers: machineReducers): Machine {
 
   return machine;
 }
-
-// // With real utility functions, you should only need to set each transition's name as key and the reducer as value. Then we would map the machine into what we see here.
-// const machine = {
-//   initial: {
-//     transitions: {
-//       edit: {
-//         trigger: v => initialEditSubject.next(v),
-//         stream: initialEditSubject.asObservable(),
-//         updater: initialEditUpdater
-//       }
-//     },
-
-//     updaters: merge(initialEditUpdater)
-//   },
-//   editing: {
-//     transitions: {
-//       edit: {
-//         trigger: v => editingEditSubject.next(v),
-//         stream: editingEditSubject.asObservable(),
-//         updater: editingEditUpdater
-//       }
-//     },
-//     updaters: merge(editingEditUpdater)
-//   }
-// };

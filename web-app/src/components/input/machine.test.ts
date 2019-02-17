@@ -1,11 +1,38 @@
 import { machine } from "./machine";
+import { take, skip } from "rxjs/operators";
 
-test("machine", () => {
+test("machine trigger and stream", () => {
   const m = machine({
-    foo: {
-      bar: (v: string) => (s: { v: string }) => ({ v })
+    initial: {
+      setValue: (v: string) => (s: { v: string }) => ({ v })
+    }
+  });
+  const r = m.initial.actions.setValue.stream.pipe(take(1)).forEach(x => {
+    expect(x).toEqual("abc");
+  });
+  m.initial.actions.setValue.trigger("abc");
+  return r;
+});
+
+test("machine action updater", () => {
+  const m = machine({
+    initial: {
+      setValue: (v: string) => (s: { v: string }) => ({ v }),
+      resetValue: () => (s: { v: string }) => ({ v: "" })
     }
   });
 
-  expect(Object.keys(m.foo.bar)).toEqual(["trigger", "stream", "updater"]);
+  const r = m.initial.updater
+    .pipe(
+      skip(1),
+      take(1)
+    )
+    .forEach(x => {
+      expect(x({ v: "" })).toEqual({ v: "abc" });
+    });
+
+  m.initial.actions.resetValue.trigger(null);
+  m.initial.actions.setValue.trigger("abc");
+
+  return r;
 });
