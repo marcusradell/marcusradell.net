@@ -1,5 +1,5 @@
 import { Subject, merge, Observable } from "rxjs";
-import { map } from "rxjs/operators";
+import { map, startWith, switchMap, scan, tap } from "rxjs/operators";
 
 type Updater<S> = (state: S) => S;
 
@@ -66,7 +66,37 @@ function machineNode<S>(reducers: Reducers<S>): MachineNode<S> {
   return result;
 }
 
-export function machine(machineReducers: MachineReducers<any>): Machine {
+type MachineState<S> = any;
+
+function createMachineState<S>(
+  machine: Machine,
+  initialState: S
+): Observable<MachineState<S>> {
+  // Will be triggered each time the state changes (should fix distinctUntilChanged and only look for machineState changes).
+  const doTransitionSubject = new Subject<any>();
+
+  // Start listen to all the state updaters in the machine's initial state.
+  // Then each time the machine state changes, we will switch to the machine's new state instead.
+  const currentTransitionsStream = doTransitionSubject.pipe<any, any>(
+    startWith(machine.initial.updater),
+    switchMap(stream => stream)
+  );
+
+  const ms: Observable<MachineState<S>> = currentTransitionsStream.pipe(
+    startWith(initialState),
+    scan<any, S>((state, updater) => updater(state)),
+    tap(state =>
+      doTransitionSubject.next(machine[(state as any).machine].updater)
+    )
+  );
+
+  return ms;
+}
+
+export function createMachine<S>(
+  machineReducers: MachineReducers<any>,
+  initialState: S
+): [Machine, Observable<MachineState<S>>] {
   const machine: Machine = Object.keys(machineReducers).reduce(
     (m: Machine, k: string) => {
       const reducers = machineReducers[k];
@@ -76,5 +106,7 @@ export function machine(machineReducers: MachineReducers<any>): Machine {
     {} as Machine
   );
 
-  return machine;
+  const machineState = createMachineState(machine, initialState);
+
+  return [machine, machineState];
 }

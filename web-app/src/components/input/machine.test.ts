@@ -1,8 +1,8 @@
-import { machine } from "./machine";
+import { createMachine } from "./machine";
 import { take, skip } from "rxjs/operators";
 
 test("machine trigger and stream", () => {
-  const m = machine({
+  const m = createMachine({
     initial: {
       setValue: (v: string) => (s: { v: string }) => ({ v })
     }
@@ -15,7 +15,7 @@ test("machine trigger and stream", () => {
 });
 
 test("machine action updater", () => {
-  const m = machine({
+  const m = createMachine({
     initial: {
       setValue: (v: string) => (s: { v: string }) => ({ v }),
       resetValue: () => (s: { v: string }) => ({ v: "" })
