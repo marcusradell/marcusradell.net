@@ -1,8 +1,8 @@
 import { createMachine } from ".";
-import { take, skip } from "rxjs/operators";
+import { take, reduce } from "rxjs/operators";
 
 type State = {
-  machine: "initial";
+  machine: "initial" | "edit";
   data: string;
 };
 
@@ -34,33 +34,54 @@ test("machine action updater", () => {
   type MachineReducers = {
     initial: {
       setValue: (data: string) => (s: State) => State;
+    };
+    edit: {
+      setValue: (data: string) => (s: State) => State;
       resetValue: () => (s: State) => State;
     };
   };
 
   const initialState: State = { machine: "initial", data: "" };
+
   const machineReducers: MachineReducers = {
     initial: {
+      setValue: (data: string) => (s: State) => ({
+        ...s,
+        data,
+        machine: "edit"
+      })
+    },
+    edit: {
       setValue: (data: string) => (s: State) => ({ ...s, data }),
       resetValue: () => (s: State) => ({ ...s, data: "" })
     }
   };
-  const [m] = createMachine<State, MachineReducers>(
+
+  const [machine, machineState] = createMachine<State, MachineReducers>(
     machineReducers,
     initialState
   );
 
-  const r = m.initial.updater
+  const r = machineState
     .pipe(
-      skip(1),
-      take(1)
+      take(4),
+      reduce<any, any[]>((acc, val) => {
+        acc.push(val);
+        return acc;
+      }, [])
     )
-    .forEach(updater => {
-      expect(updater({ data: "" })).toEqual({ data: "abc" });
+    .forEach(state => {
+      expect(state).toEqual([
+        { data: "", machine: "initial" },
+        { data: "abc", machine: "edit" },
+        { data: "123", machine: "edit" },
+        { data: "", machine: "edit" }
+      ]);
     });
 
-  m.initial.actions.resetValue.trigger(null);
-  m.initial.actions.setValue.trigger("abc");
+  machine.initial.actions.setValue.trigger("abc");
+  machine.edit.actions.setValue.trigger("123");
+  machine.edit.actions.resetValue.trigger(null);
 
   return r;
 });
