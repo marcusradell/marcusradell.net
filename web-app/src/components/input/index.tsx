@@ -1,38 +1,70 @@
 import { createMachine } from "../../machine";
-import { State } from "./types";
-import { MachineReducers } from "./types";
+import { State, MachineState } from "./types";
+import { Reducers } from "./types";
+import { initialState, machineReducers } from "./model";
+import { Machine } from "../../machine/types";
+import React, { useEffect, useState, ChangeEvent } from "react";
+import { Observable } from "rxjs";
 
-const initialState: State = {
-  machine: "initial",
-  data: ""
-};
+export class InputComponent {
+  machine: Machine<State, Reducers>;
+  machineState: Observable<State>;
 
-const machineReducers: MachineReducers = {
-  initial: {
-    edit: (s: string) => (state: State) => ({
-      ...state,
-      machine: "editing",
-      data: s
-    })
-  },
-  editing: {
-    edit: (s: string) => (state: State) => ({
-      ...state,
-      data: s
-    })
+  constructor() {
+    const [machine, machineState] = createMachine<State, Reducers>(
+      machineReducers,
+      initialState
+    );
+
+    this.machine = machine;
+    this.machineState = machineState;
   }
-};
 
-const [machine, machineState] = createMachine<State, MachineReducers>(
-  machineReducers,
-  initialState
-);
+  public onChange(machineState: MachineState) {
+    return (e: ChangeEvent<HTMLInputElement>) => {
+      const { value } = e.target;
 
-machineState
-  .forEach(state => {
-    console.log({ state });
-  })
-  .then(() => console.error("Unexpectedly completed the stream."))
-  .catch(error => console.error(error));
+      if (machineState === "disabled") {
+        throw new Error("Cannot handle onChange while disabled.");
+      }
 
-machine.initial.actions.edit.trigger("Hello world!");
+      this.machine[machineState].actions.edit.trigger(value);
+    };
+  }
+
+  public onClick(machineState: MachineState) {
+    return () => {
+      if (machineState === "disabled") {
+        this.machine[machineState].actions.enable.trigger(null);
+      } else {
+        this.machine[machineState].actions.disable.trigger(null);
+      }
+    };
+  }
+
+  public getView() {
+    return () => {
+      const [state, setState] = useState(initialState);
+
+      useEffect(() => {
+        const subscription = this.machineState.subscribe(x => {
+          setState(x);
+        });
+
+        return () => subscription.unsubscribe();
+      }, []);
+
+      return (
+        <>
+          <input
+            disabled={state.machine === "disabled"}
+            value={state.data}
+            onChange={this.onChange(state.machine)}
+          />
+          <button onClick={this.onClick(state.machine)}>Toggle</button>
+          <pre>{JSON.stringify(state, null, 2)}</pre>
+        </>
+      );
+    };
+  }
+}

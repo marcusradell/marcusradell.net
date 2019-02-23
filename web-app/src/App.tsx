@@ -1,4 +1,5 @@
 import React, { useReducer } from "react";
+import { InputComponent } from "./components/input";
 
 type State = {
   value: string;
@@ -22,20 +23,13 @@ function reducer(state: State, action: Action) {
   }
 }
 
+const inputComponent = new InputComponent();
+const Input = inputComponent.getView();
+
 export function App() {
-  const [state, dispatch] = useReducer(reducer, initialState);
-
-  function onChange(e: React.ChangeEvent<HTMLInputElement>) {
-    dispatch({
-      type: "set_value",
-      payload: e.target.value
-    });
-  }
-
   return (
     <>
-      <input value={state.value} onChange={onChange} />
-      {JSON.stringify(state)}
+      <Input />
     </>
   );
 }

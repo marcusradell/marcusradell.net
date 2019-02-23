@@ -1,15 +1,20 @@
-export type MachineState = "initial" | "editing";
+export type MachineState = "initial" | "editing" | "disabled";
 
 export type State = {
   machine: MachineState;
   data: string;
 };
 
-export type MachineReducers = {
+export type Reducers = {
   initial: {
-    edit: (s: string) => (state: State) => State;
+    edit: (data: string) => (state: State) => State;
+    disable: () => (s: State) => State;
   };
   editing: {
-    edit: (s: string) => (state: State) => State;
+    edit: (data: string) => (state: State) => State;
+    disable: () => (s: State) => State;
+  };
+  disabled: {
+    enable: () => (s: State) => State;
   };
 };
