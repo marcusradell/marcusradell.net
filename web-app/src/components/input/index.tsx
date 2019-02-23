@@ -1,12 +1,13 @@
-import { createMachine } from "./machine";
+import { createMachine } from "../../machine";
 import { State } from "./types";
+import { MachineReducers } from "./types";
 
 const initialState: State = {
   machine: "initial",
   data: ""
 };
 
-const machineReducers = {
+const machineReducers: MachineReducers = {
   initial: {
     edit: (s: string) => (state: State) => ({
       ...state,
@@ -22,7 +23,10 @@ const machineReducers = {
   }
 };
 
-const [machine, machineState] = createMachine(machineReducers, initialState);
+const [machine, machineState] = createMachine<State, MachineReducers>(
+  machineReducers,
+  initialState
+);
 
 machineState
   .forEach(state => {
