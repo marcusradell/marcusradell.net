@@ -24,46 +24,30 @@ export class InputComponent {
     return (e: ChangeEvent<HTMLInputElement>) => {
       const { value } = e.target;
 
-      if (machineState === "disabled") {
-        throw new Error("Cannot handle onChange while disabled.");
-      }
-
       this.machine[machineState].actions.edit.trigger(value);
     };
   }
 
-  public onClick(machineState: MachineState) {
-    return () => {
-      if (machineState === "disabled") {
-        this.machine[machineState].actions.enable.trigger(null);
-      } else {
-        this.machine[machineState].actions.disable.trigger(null);
-      }
-    };
-  }
-
-  public getView() {
+  public createView() {
     return () => {
       const [state, setState] = useState(initialState);
 
       useEffect(() => {
         const subscription = this.machineState.subscribe(x => {
           setState(x);
+          console.log(x);
         });
 
         return () => subscription.unsubscribe();
       }, []);
 
       return (
-        <>
-          <input
-            disabled={state.machine === "disabled"}
-            value={state.data}
-            onChange={this.onChange(state.machine)}
-          />
-          <button onClick={this.onClick(state.machine)}>Toggle</button>
-          <pre>{JSON.stringify(state, null, 2)}</pre>
-        </>
+        <input
+          className="form-control"
+          type="text"
+          value={state.data}
+          onChange={this.onChange(state.machine)}
+        />
       );
     };
   }

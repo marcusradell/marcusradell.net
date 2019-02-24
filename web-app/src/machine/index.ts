@@ -1,5 +1,12 @@
 import { Subject, merge, Observable } from "rxjs";
-import { map, startWith, switchMap, scan, tap } from "rxjs/operators";
+import {
+  map,
+  startWith,
+  switchMap,
+  scan,
+  tap,
+  shareReplay
+} from "rxjs/operators";
 import {
   Reducer,
   MachineNodeAction,
@@ -68,7 +75,8 @@ function createMachineState<S, N>(
     scan<Updater<S>, S>((state, updater) => updater(state)),
     tap(state =>
       doTransitionSubject.next((machine as any)[(state as any).machine].updater)
-    )
+    ),
+    shareReplay(1)
   );
 
   return ms;

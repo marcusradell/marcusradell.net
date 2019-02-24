@@ -1,5 +1,5 @@
-import React, { useReducer } from "react";
-import { InputComponent } from "./components/input";
+import React from "react";
+import { LoginFormComponent } from "./components/login-form";
 
 type State = {
   value: string;
@@ -23,13 +23,13 @@ function reducer(state: State, action: Action) {
   }
 }
 
-const inputComponent = new InputComponent();
-const Input = inputComponent.getView();
+const loginFormComponent = new LoginFormComponent();
+const LoginForm = loginFormComponent.createView();
 
 export function App() {
   return (
     <>
-      <Input />
+      <LoginForm />
     </>
   );
 }
