@@ -18,7 +18,7 @@ import {
   MachineState
 } from "./types";
 
-function machineNodeAction<E, S>(
+function createMachineNodeAction<E, S>(
   reducer: Reducer<E, S>
 ): MachineNodeAction<E, S> {
   const subject = new Subject<E>();
@@ -43,9 +43,9 @@ function createUpdater<S, A>(mn: MachineNode<S, A>): Observable<Updater<S>> {
 }
 
 function createMachineNode<S, A>(reducers: Reducers<S, A>): MachineNode<S, A> {
-  let result: MachineNode<S, A> = Object.keys(reducers).reduce(
+  let result: MachineNode<S, A> = (Object.keys(reducers) as (keyof A)[]).reduce(
     (mn, k) => {
-      mn.actions[k as keyof A] = machineNodeAction(reducers[k as keyof A]);
+      mn.actions[k] = createMachineNodeAction(reducers[k]);
       return mn;
     },
     { actions: {} } as MachineNode<S, A>
