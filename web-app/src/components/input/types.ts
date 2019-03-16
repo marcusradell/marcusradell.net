@@ -1,4 +1,6 @@
-export type MachineState = "initial";
+export enum MachineState {
+  Initial = "initial"
+}
 
 export type State = {
   machine: MachineState;

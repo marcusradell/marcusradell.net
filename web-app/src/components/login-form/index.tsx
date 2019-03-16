@@ -1,35 +1,25 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Components } from "./types";
 import { InputComponent } from "../input";
-import { combineLatest } from "rxjs/operators";
+import { ValidationComponent } from "../validation";
 
 export class LoginFormComponent {
   components: Components;
 
   constructor() {
+    const nickname = new InputComponent();
+
     this.components = {
-      nickname: new InputComponent(),
+      nickname,
+      nicknameValidation: new ValidationComponent(nickname.stateStream),
       password: new InputComponent()
     };
   }
 
   public createView() {
     const Nickname = this.components.nickname.createView();
+    const NicknameValidation = this.components.nicknameValidation.createView();
     const Password = this.components.password.createView();
-
-    // this.components.nickname.machineState
-    //   .pipe(
-    //     combineLatest(
-    //       this.components.password.machineState,
-    //       (nickname, password) => ({
-    //         nickname,
-    //         password
-    //       })
-    //     )
-    //   )
-    //   .forEach(state => {
-    //     console.log(state);
-    //   });
 
     return () => {
       return (
@@ -37,6 +27,9 @@ export class LoginFormComponent {
           <div className="form-group">
             <label htmlFor="nickname">Nickname</label>
             <Nickname />
+            <div>
+              <NicknameValidation />
+            </div>
             <label htmlFor="password">Password</label>
             <Password />
           </div>

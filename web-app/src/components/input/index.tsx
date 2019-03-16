@@ -1,23 +1,24 @@
 import { createMachine } from "../../machine";
 import { State, MachineState } from "./types";
 import { Reducers } from "./types";
-import { initialState, machineReducers } from "./model";
+import { initialState, reducers } from "./model";
 import { Machine } from "../../machine/types";
 import React, { useEffect, useState, ChangeEvent } from "react";
 import { Observable } from "rxjs";
+export * from "./types";
 
 export class InputComponent {
   machine: Machine<State, Reducers>;
-  machineState: Observable<State>;
+  stateStream: Observable<State>;
 
   constructor() {
-    const [machine, machineState] = createMachine<State, Reducers>(
-      machineReducers,
+    const [machine, stateStream] = createMachine<State, Reducers>(
+      reducers,
       initialState
     );
 
     this.machine = machine;
-    this.machineState = machineState;
+    this.stateStream = stateStream;
   }
 
   public onChange(machineState: MachineState) {
@@ -33,7 +34,7 @@ export class InputComponent {
       const [state, setState] = useState(initialState);
 
       useEffect(() => {
-        const subscription = this.machineState.subscribe(x => {
+        const subscription = this.stateStream.subscribe(x => {
           setState(x);
           console.log(x);
         });
