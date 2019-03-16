@@ -22,7 +22,9 @@ export class WebSocketServer implements IWebSocketServer {
     this.wsServer = new Ws.Server({ port });
 
     this.wsServer.on("connection", (wsc: Ws) => {
+      console.log("wsServer connection");
       wsc.on("message", (message: string) => {
+        console.log(`Got message <${message}>.`);
         // TODO: Make sure it's the correct type
         this.wsSubject.next(JSON.parse(message));
         // this.wsServer.clients.forEach((c: Ws) => {

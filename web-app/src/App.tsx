@@ -10,7 +10,12 @@ const LoginForm = loginFormComponent.createView();
 
 export function App() {
   return (
-    <div style={{ backgroundColor: "black" }}>
+    <div
+      style={{
+        backgroundColor: "black",
+        backgroundImage: "linear-gradient(to bottom right, pink, steelblue)"
+      }}
+    >
       <div
         className="container"
         style={{
