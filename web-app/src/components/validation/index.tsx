@@ -2,7 +2,14 @@ import { createMachine } from "../../machine";
 import React, { useEffect, useState } from "react";
 import { createReducers, initialState } from "./model";
 import { Machine } from "../../machine/types";
-import { State, Reducers, ViewState, MachineStates } from "./types";
+import {
+  State,
+  Reducers,
+  ViewState,
+  MachineStates,
+  Predicate,
+  ErrorMessage
+} from "./types";
 import { Observable } from "rxjs";
 import { State as InputState } from "../input";
 import { tap, withLatestFrom, skip } from "rxjs/operators";
@@ -12,12 +19,13 @@ export class ValidationComponent {
   public stateStream: Observable<State>;
   private inputStateStream: Observable<InputState>;
 
-  constructor(inputStateStream: Observable<InputState>) {
+  constructor(
+    predicate: Predicate<InputState>,
+    errorMessage: ErrorMessage<InputState>,
+    inputStateStream: Observable<InputState>
+  ) {
     const [machine, machineState] = createMachine(
-      createReducers<InputState>(
-        inputState => Boolean(inputState.data),
-        "Validation error."
-      ),
+      createReducers<InputState>(predicate, errorMessage),
       initialState
     );
     this.machine = machine;
@@ -65,7 +73,7 @@ export class ValidationComponent {
 
       switch (state.self.machine) {
         case MachineStates.Initial:
-          return null;
+          return <span>&nbsp;</span>;
         case MachineStates.Invalid:
           return <span className="text-warning">{state.self.data}</span>;
         case MachineStates.Valid:

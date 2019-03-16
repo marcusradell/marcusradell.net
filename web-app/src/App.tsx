@@ -10,8 +10,23 @@ const LoginForm = loginFormComponent.createView();
 
 export function App() {
   return (
-    <>
-      <LoginForm />
-    </>
+    <div style={{ backgroundColor: "black" }}>
+      <div
+        className="container"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "100vh"
+        }}
+      >
+        <div className="card">
+          <div className="card-header">Login</div>
+          <div className="card-body">
+            <LoginForm />
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

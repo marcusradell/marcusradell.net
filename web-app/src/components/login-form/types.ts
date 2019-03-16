@@ -5,4 +5,5 @@ export type Components = {
   nickname: InputComponent;
   nicknameValidation: ValidationComponent;
   password: InputComponent;
+  passwordValidation: ValidationComponent;
 };

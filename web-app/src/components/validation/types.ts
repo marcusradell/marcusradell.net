@@ -21,6 +21,8 @@ export type Reducers = {
 
 export type Predicate<InputState> = (s: InputState) => boolean;
 
+export type ErrorMessage<InputState> = (s: InputState) => string;
+
 export type ViewState = {
   self: State;
   input: InputState | null;

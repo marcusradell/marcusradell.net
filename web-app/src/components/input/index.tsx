@@ -29,7 +29,7 @@ export class InputComponent {
     };
   }
 
-  public createView() {
+  public createView(type: "text" | "password") {
     return () => {
       const [state, setState] = useState(initialState);
 
@@ -43,8 +43,8 @@ export class InputComponent {
 
       return (
         <input
-          className="form-control"
-          type="text"
+          className="form-control form-control-lg"
+          type={type}
           value={state.data}
           onChange={this.onChange(state.machine)}
         />
