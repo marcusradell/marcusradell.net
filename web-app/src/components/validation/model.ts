@@ -11,8 +11,9 @@ export function createReducers<InputState>(
 ) {
   const validate = (inputState: InputState) => (s: State) => ({
     ...s,
-    machine: (console.log("test", predicate(inputState)),
-    predicate(inputState) ? MachineStates.Valid : MachineStates.Invalid),
+    machine: predicate(inputState)
+      ? MachineStates.Valid
+      : MachineStates.Invalid,
     data: predicate(inputState) ? s.data : error
   });
 

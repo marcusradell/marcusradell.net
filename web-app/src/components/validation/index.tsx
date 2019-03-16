@@ -2,10 +2,10 @@ import { createMachine } from "../../machine";
 import React, { useEffect, useState } from "react";
 import { createReducers, initialState } from "./model";
 import { Machine } from "../../machine/types";
-import { State, Reducers, ViewState } from "./types";
-import { Observable, combineLatest } from "rxjs";
+import { State, Reducers, ViewState, MachineStates } from "./types";
+import { Observable } from "rxjs";
 import { State as InputState } from "../input";
-import { tap, withLatestFrom } from "rxjs/operators";
+import { tap, withLatestFrom, skip } from "rxjs/operators";
 
 export class ValidationComponent {
   public machine: Machine<State, Reducers>;
@@ -35,6 +35,7 @@ export class ValidationComponent {
       useEffect(() => {
         const validatorSubscription = this.inputStateStream
           .pipe(
+            skip(1),
             withLatestFrom(this.stateStream, (inputState, state) => ({
               inputState,
               state
@@ -62,7 +63,14 @@ export class ValidationComponent {
         };
       }, []);
 
-      return <span className="text-error">{JSON.stringify(state)}</span>;
+      switch (state.self.machine) {
+        case MachineStates.Initial:
+          return null;
+        case MachineStates.Invalid:
+          return <span className="text-warning">{state.self.data}</span>;
+        case MachineStates.Valid:
+          return <span className="text-success">OK!</span>;
+      }
     };
   }
 }

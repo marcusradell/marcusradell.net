@@ -4,7 +4,7 @@ import { InputComponent } from "../input";
 import { ValidationComponent } from "../validation";
 
 export class LoginFormComponent {
-  components: Components;
+  public components: Components;
 
   constructor() {
     const nickname = new InputComponent();

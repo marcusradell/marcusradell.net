@@ -8,8 +8,8 @@ import { Observable } from "rxjs";
 export * from "./types";
 
 export class InputComponent {
-  machine: Machine<State, Reducers>;
-  stateStream: Observable<State>;
+  public machine: Machine<State, Reducers>;
+  public stateStream: Observable<State>;
 
   constructor() {
     const [machine, stateStream] = createMachine<State, Reducers>(
@@ -36,7 +36,6 @@ export class InputComponent {
       useEffect(() => {
         const subscription = this.stateStream.subscribe(x => {
           setState(x);
-          console.log(x);
         });
 
         return () => subscription.unsubscribe();
