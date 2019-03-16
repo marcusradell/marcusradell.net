@@ -43,18 +43,24 @@ export class LoginFormComponent {
 
     return () => {
       return (
-        <form style={{ width: "500px" }}>
-          <div className="form-group">
-            <label htmlFor="nickname">Nickname</label>
-            <Nickname />
-            <div>
-              <NicknameValidation />
+        <div style={{ width: "500px" }}>
+          <p className="text-info">
+            If you don't have a login, a new one will be created for you the
+            first time.
+          </p>
+          <form>
+            <div className="form-group">
+              <label htmlFor="nickname">Nickname</label>
+              <Nickname />
+              <div>
+                <NicknameValidation />
+              </div>
+              <label htmlFor="password">Password</label>
+              <Password />
+              <PasswordValidation />
             </div>
-            <label htmlFor="password">Password</label>
-            <Password />
-            <PasswordValidation />
-          </div>
-        </form>
+          </form>
+        </div>
       );
     };
   }
