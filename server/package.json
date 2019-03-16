@@ -4,7 +4,8 @@
   "description": "",
   "scripts": {
     "start": "node lib/cmd/server.js",
-    "build": "tsc"
+    "build": "tsc",
+    "dev": "ts-node-dev src/cmd/server.ts"
   },
   "keywords": [],
   "author": "",
@@ -22,6 +23,7 @@
     "pg-promise": "^8.5.5",
     "rxjs": "^6.4.0",
     "ts-jest": "^23.10.5",
+    "ts-node-dev": "^1.0.0-pre.32",
     "typescript": "^3.3.3",
     "uuid": "^3.3.2",
     "webpack": "^4.29.4",
