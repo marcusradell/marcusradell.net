@@ -22,7 +22,8 @@ export function App() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          minHeight: "100vh"
+          minHeight: "100vh",
+          maxWidth: "500px"
         }}
       >
         <div className="card">

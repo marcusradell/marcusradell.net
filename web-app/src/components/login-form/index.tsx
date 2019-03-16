@@ -84,7 +84,7 @@ export class LoginFormComponent {
       }, []);
 
       return (
-        <div style={{ width: "500px" }}>
+        <div>
           <p className="text-info">
             If you don't have a login, a new one will be created for you the
             first time.
