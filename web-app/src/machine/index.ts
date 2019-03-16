@@ -17,13 +17,14 @@ import {
   Machine,
   MachineState
 } from "./types";
+export * from "./types";
 
 function createMachineNodeAction<E, S>(
   reducer: Reducer<E, S>
 ): MachineNodeAction<E, S> {
   const subject = new Subject<E>();
 
-  function trigger(x: E) {
+  function trigger(x?: E) {
     subject.next(x);
   }
 

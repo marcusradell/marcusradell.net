@@ -13,6 +13,7 @@ import {
 import { Observable } from "rxjs";
 import { State as InputState } from "../input";
 import { tap, withLatestFrom, skip } from "rxjs/operators";
+export * from "./types";
 
 export class ValidationComponent {
   public machine: Machine<State, Reducers>;

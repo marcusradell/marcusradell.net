@@ -6,7 +6,7 @@ export type Reducer<E, S> = (event: E) => Updater<S>;
 
 export type Reducers<S, A> = { [k in keyof A]: Reducer<any, S> };
 
-export type Trigger<E> = (x: E) => void;
+export type Trigger<E> = (x?: E) => void;
 
 export type MachineNodeAction<E, S> = {
   trigger: Trigger<E>;

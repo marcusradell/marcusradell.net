@@ -21,7 +21,9 @@ export function App() {
         }}
       >
         <div className="card">
-          <div className="card-header">Login</div>
+          <div className="card-header">
+            <h1>Login</h1>
+          </div>
           <div className="card-body">
             <LoginForm />
           </div>
