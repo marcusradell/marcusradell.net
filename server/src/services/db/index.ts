@@ -31,6 +31,13 @@ export class Db implements IDb {
       cid: uuid()
     });
 
+    this.db.none(`
+    create table if not exists users (
+        uuid uuid primary key,
+        data jsonb not null
+    )
+    `);
+
     this.initialized = true;
   }
 

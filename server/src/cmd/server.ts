@@ -5,6 +5,7 @@ import { Db } from "../services/db";
 import { UserCommandTypes, UserLoginCommand } from "../types";
 import { of } from "rxjs";
 import { PathReporter } from "io-ts/lib/PathReporter";
+import uuid from "uuid/v4";
 
 async function run() {
   dotenv.config();
@@ -57,7 +58,10 @@ async function run() {
         }
         return db
           .getDb()
-          .none(`insert into users values ($<nickname>, $<password>)`, m.data)
+          .none(`insert into users values ($<uuid>, $<data>)`, {
+            uuid: uuid(),
+            data: m.data
+          })
           .then(() => {
             logger.mergeLog(
               of({

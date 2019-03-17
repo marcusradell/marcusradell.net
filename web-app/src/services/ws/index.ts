@@ -17,11 +17,12 @@ export class Ws implements IWs {
 
   public publish(type: string, data?: any): string {
     const cid = uuid();
-    this.ws.next({
+    const m = {
       type,
       data,
       cid
-    });
+    };
+    this.ws.next(m);
     return cid;
   }
 }

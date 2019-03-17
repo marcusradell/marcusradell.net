@@ -1,7 +1,7 @@
 import * as t from "io-ts";
 
 export enum UserCommandTypes {
-  Login = "login"
+  Login = "user#login"
 }
 
 export const UserLoginCommand = t.type({

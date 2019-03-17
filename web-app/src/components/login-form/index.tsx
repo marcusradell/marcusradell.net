@@ -57,18 +57,18 @@ export class LoginFormComponent {
             withLatestFrom(
               this.components.nickname.stateStream,
               this.components.password.stateStream,
-              (submitState, nickname, password) => ({
+              (submitState, nicknameState, passwordState) => ({
                 submitState,
                 formState: {
-                  nickname,
-                  password
+                  nickname: nicknameState.data,
+                  password: passwordState.data
                 }
               })
             )
           )
           .subscribe(state => {
             if (state.submitState.machine === MachineStates.Submitting) {
-              this.ws.publish("login", state.formState);
+              this.ws.publish("user#login", state.formState);
 
               this.components.submitButton.machine[
                 MachineStates.Submitting
