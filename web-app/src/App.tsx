@@ -6,7 +6,7 @@ export class AppComponent {
   public loginFormComponent: LoginFormComponent;
 
   constructor(ws: IWs) {
-    this.loginFormComponent = new LoginFormComponent();
+    this.loginFormComponent = new LoginFormComponent(ws);
   }
 
   public createView() {

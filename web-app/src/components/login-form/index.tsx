@@ -4,14 +4,16 @@ import { InputComponent } from "../input";
 import { SubmitButtonComponent } from "../submit-button";
 import { MachineStates } from "../submit-button/types";
 import { withLatestFrom } from "rxjs/operators";
+import { IWs } from "../../services/ws";
 
 const minNicknameLength = 6;
 const minPasswordLength = 12;
 
 export class LoginFormComponent {
   public components: Components;
+  private ws: IWs;
 
-  constructor() {
+  constructor(ws: IWs) {
     const nickname = new InputComponent(
       s => s.data.length >= minNicknameLength,
       s =>
@@ -40,6 +42,7 @@ export class LoginFormComponent {
 
       submitButton
     };
+    this.ws = ws;
   }
 
   public createView() {
@@ -65,14 +68,16 @@ export class LoginFormComponent {
           )
           .subscribe(state => {
             if (state.submitState.machine === MachineStates.Submitting) {
-              Promise.resolve(state.formState).then(() => {
-                this.components.submitButton.machine[
-                  MachineStates.Submitting
-                ].actions.done.trigger();
-              });
+              this.ws.publish("login", state.formState);
+
+              this.components.submitButton.machine[
+                MachineStates.Submitting
+              ].actions.done.trigger();
             }
           });
-        return () => {};
+        return () => {
+          subscription.unsubscribe();
+        };
       }, []);
 
       return (
