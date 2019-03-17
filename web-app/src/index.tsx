@@ -4,9 +4,12 @@ import { AppComponent } from "./app";
 import "./components/input";
 import * as serviceWorker from "./serviceWorker";
 import { Ws, IWs } from "./services/ws";
-import uuid from "uuid/v4";
 
-const ws: IWs = new Ws("ws://localhost:3001");
+if (!process.env.REACT_APP_WS_URL) {
+  throw new Error("Missing REACT_APP_WS_URL.");
+}
+
+const ws: IWs = new Ws(process.env.REACT_APP_WS_URL);
 
 ws.getMessageStream().forEach(m => {
   console.log(`Recieved message <${m}>.`);
