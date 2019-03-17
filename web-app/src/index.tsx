@@ -1,13 +1,23 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { App } from "./app";
+import { AppComponent } from "./app";
 import "./components/input";
 import * as serviceWorker from "./serviceWorker";
-import { webSocket } from "rxjs/webSocket";
+import { WebSocket, IWebSocket } from "./services/web-socket";
+import uuid from "uuid/v4";
 
-const ws = webSocket({ url: "ws://localhost:3001" });
-ws.forEach(s => console.log(s));
-ws.next("test");
+const webSocket: IWebSocket = new WebSocket("ws://localhost:3001");
+
+webSocket.getMessageStream().forEach(m => {
+  console.log(`Recieved message <${m}>.`);
+});
+
+webSocket.publish("ping");
+
+const appComponent = new AppComponent();
+(window as any).appComponent = appComponent;
+
+const App = appComponent.createView();
 
 ReactDOM.render(<App />, document.getElementById("root"));
 

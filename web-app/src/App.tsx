@@ -1,40 +1,43 @@
 import React from "react";
 import { LoginFormComponent } from "./components/login-form";
 
-const loginFormComponent = new LoginFormComponent();
-const LoginForm = loginFormComponent.createView();
+export class AppComponent {
+  public loginFormComponent: LoginFormComponent;
 
-(window as any).app = {
-  loginFormComponent
-};
+  constructor() {
+    this.loginFormComponent = new LoginFormComponent();
+  }
 
-export function App() {
-  return (
-    <div
-      style={{
-        backgroundColor: "black",
-        backgroundImage: "linear-gradient(to bottom right, pink, steelblue)"
-      }}
-    >
+  public createView() {
+    const LoginForm = this.loginFormComponent.createView();
+
+    return () => (
       <div
-        className="container"
         style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          minHeight: "100vh",
-          maxWidth: "500px"
+          backgroundColor: "black",
+          backgroundImage: "linear-gradient(to bottom right, pink, steelblue)"
         }}
       >
-        <div className="card">
-          <div className="card-header">
-            <h1>Login</h1>
-          </div>
-          <div className="card-body">
-            <LoginForm />
+        <div
+          className="container"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            minHeight: "100vh",
+            maxWidth: "500px"
+          }}
+        >
+          <div className="card">
+            <div className="card-header">
+              <h1>Login</h1>
+            </div>
+            <div className="card-body">
+              <LoginForm />
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  }
 }

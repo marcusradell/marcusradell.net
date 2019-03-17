@@ -33,7 +33,7 @@ export class WebSocketServer implements IWebSocketServer {
         //   }
         //   c.send(message);
         // });
-        // wsc.send(JSON.stringify(message));
+        wsc.send(JSON.stringify(message));
       });
     });
   }
