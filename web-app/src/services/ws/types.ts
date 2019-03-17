@@ -6,7 +6,7 @@ export type Message = {
   data?: any;
 };
 
-export interface IWebSocket {
+export interface IWs {
   getMessageStream: () => Observable<Message>;
   publish: (type: string, data?: any) => string;
 }

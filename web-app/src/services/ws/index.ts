@@ -1,10 +1,10 @@
 import { WebSocketSubject, webSocket } from "rxjs/webSocket";
 import { Observable } from "rxjs";
-import { Message, IWebSocket } from "./types";
+import { Message, IWs } from "./types";
 import uuid from "uuid/v4";
 export * from "./types";
 
-export class WebSocket implements IWebSocket {
+export class Ws implements IWs {
   private ws: WebSocketSubject<Message>;
 
   constructor(url: string) {

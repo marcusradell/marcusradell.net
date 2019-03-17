@@ -3,18 +3,18 @@ import ReactDOM from "react-dom";
 import { AppComponent } from "./app";
 import "./components/input";
 import * as serviceWorker from "./serviceWorker";
-import { WebSocket, IWebSocket } from "./services/web-socket";
+import { Ws, IWs } from "./services/ws";
 import uuid from "uuid/v4";
 
-const webSocket: IWebSocket = new WebSocket("ws://localhost:3001");
+const ws: IWs = new Ws("ws://localhost:3001");
 
-webSocket.getMessageStream().forEach(m => {
+ws.getMessageStream().forEach(m => {
   console.log(`Recieved message <${m}>.`);
 });
 
-webSocket.publish("ping");
+ws.publish("ping");
 
-const appComponent = new AppComponent();
+const appComponent = new AppComponent(ws);
 (window as any).appComponent = appComponent;
 
 const App = appComponent.createView();

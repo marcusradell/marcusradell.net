@@ -1,10 +1,11 @@
 import React from "react";
 import { LoginFormComponent } from "./components/login-form";
+import { IWs } from "./services/ws";
 
 export class AppComponent {
   public loginFormComponent: LoginFormComponent;
 
-  constructor() {
+  constructor(ws: IWs) {
     this.loginFormComponent = new LoginFormComponent();
   }
 
