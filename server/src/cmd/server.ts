@@ -27,7 +27,7 @@ async function run() {
     });
 
   if (process.env.DB_CONNECTION === undefined) {
-    throw new Error("Missing DB connection value.");
+    throw new Error("Missing DB_CONNECTION.");
   }
 
   const db = new Db(process.env.DB_CONNECTION);
@@ -36,7 +36,7 @@ async function run() {
   await db.init();
 
   if (process.env.PORT === undefined) {
-    throw new Error("Missing port value.");
+    throw new Error("Missing PORT.");
   }
 
   const wss = new WebSocketServer(parseInt(process.env.PORT, 10));

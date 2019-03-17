@@ -1,0 +1,1 @@
+web: node lib/cmd/server.js

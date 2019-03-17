@@ -1,11 +1,17 @@
 {
   "name": "server",
+  "main": "lib/cmd/server.js",
+  "engines": {
+    "node": "10.15.3"
+  },
   "version": "1.0.0",
   "description": "",
   "scripts": {
+    "postinstall": "npm run build",
     "start": "node lib/cmd/server.js",
     "build": "tsc",
-    "dev": "ts-node-dev src/cmd/server.ts"
+    "dev": "ts-node-dev src/cmd/server.ts",
+    "deploy-heroku": "git subtree push --prefix server heroku master"
   },
   "keywords": [],
   "author": "",
