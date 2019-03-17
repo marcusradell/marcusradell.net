@@ -5,7 +5,7 @@ import { createMachine, Machine } from "../../machine";
 import { State, Reducers, MachineStates } from "./types";
 import { initialState, reducers } from "./model";
 import { ValidationComponent } from "../validation";
-import { map } from "rxjs/operators";
+import { map, tap } from "rxjs/operators";
 import { MachineStates as ValidationMachineStates } from "../validation";
 
 export class SubmitButtonComponent {
@@ -35,8 +35,8 @@ export class SubmitButtonComponent {
       const [state, setState] = useState(initialState);
 
       useEffect(() => {
-        const subscription = this.stateStream.subscribe(x => {
-          setState(x);
+        const subscription = this.stateStream.subscribe(state => {
+          setState(state);
         });
 
         const validSubscription = this.validStream.subscribe(valid => {
@@ -51,13 +51,13 @@ export class SubmitButtonComponent {
           subscription.unsubscribe();
           validSubscription.unsubscribe();
         };
-      }, []);
+      }, [state.machine]);
 
       return (
         <button
           className={
             "btn btn-large " +
-            (state.machine === MachineStates.Disabled
+            (state.machine !== MachineStates.Enabled
               ? "btn-outline-success"
               : "btn-success")
           }
