@@ -1,42 +1,84 @@
 import dotenv from "dotenv";
-import { IMain, IDatabase } from "pg-promise";
-import pgPromise from "pg-promise";
-import { Logger } from "../services/log";
-import uuid from "uuid/v4";
-import { WebSocketServer } from "../services/web-socket-server";
+import { Logger } from "../services/logger";
+import { WebSocketServer } from "../services/wss";
+import { Db } from "../services/db";
+import { UserCommandTypes, UserLoginCommand } from "../types";
+import { of } from "rxjs";
+import { PathReporter } from "io-ts/lib/PathReporter";
 
-function run() {
+async function run() {
   dotenv.config();
-  const bootstrapCid = uuid();
 
   const logger = new Logger();
   logger
     .getLog()
-    .forEach(s => console.log(s))
-    .then(() => console.log("logSubject completed."))
-    .catch(e => console.error(e));
-
-  const pgp: IMain = pgPromise();
+    .forEach(s => {
+      console.log(s);
+      console.log("\n");
+    })
+    .then(() => {
+      console.log("logSubject completed.");
+      console.log("\n");
+    })
+    .catch(e => {
+      console.error(e);
+      console.log("\n");
+    });
 
   if (process.env.DB_CONNECTION === undefined) {
     throw new Error("Missing DB connection value.");
   }
 
-  const db: IDatabase<any> = pgp(process.env.DB_CONNECTION);
+  const db = new Db(process.env.DB_CONNECTION);
+  logger.mergeLog(db.getLog());
 
-  logger.info("Validating DB connection.", bootstrapCid);
-  db.any(`select (1 + 1)`)
-    .then(() => logger.info("DB is ready.", bootstrapCid))
-    .catch(e => {
-      logger.error(e, bootstrapCid);
-      process.exit(-1);
-    });
+  await db.init();
 
   if (process.env.PORT === undefined) {
     throw new Error("Missing port value.");
   }
 
   const wss = new WebSocketServer(parseInt(process.env.PORT, 10));
+  logger.mergeLog(wss.getLog());
+
+  wss.getMessages().forEach(m => {
+    switch (m.type) {
+      case UserCommandTypes.Login:
+        const validationResult = UserLoginCommand.decode(m);
+        if (validationResult.isLeft()) {
+          logger.mergeLog(
+            of({
+              type: "server#handle_message>failed",
+              cid: m.cid,
+              data: PathReporter.report(validationResult)
+            })
+          );
+          return;
+        }
+        return db
+          .getDb()
+          .none(`insert into users values ($<nickname>, $<password>)`, m.data)
+          .then(() => {
+            logger.mergeLog(
+              of({
+                type: "server#handle_message>succeeded",
+                cid: m.cid,
+                data: "User created successfully."
+              })
+            );
+          });
+      default:
+        logger.mergeLog(
+          of({
+            type: "server#handle_message>failed",
+            cid: m.cid,
+            data: `Got unsupported message type <${m.type}>.`
+          })
+        );
+    }
+  });
+
+  wss.init();
 }
 
 run();
