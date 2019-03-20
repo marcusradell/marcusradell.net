@@ -11,7 +11,7 @@
     "start": "node lib/cmd/server.js",
     "build": "tsc",
     "dev": "ts-node-dev src/cmd/server.ts",
-    "deploy-heroku": "cd ..; git subtree push --prefix server heroku master"
+    "deploy": "cd ..; git subtree push --prefix server heroku master"
   },
   "keywords": [],
   "author": "",
