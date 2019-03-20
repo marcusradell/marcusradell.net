@@ -8,12 +8,14 @@ export class Db implements IDb {
   private log: Subject<IDbLogMessage>;
   private db: IDatabase<any>;
   private initialized: boolean;
+  private baseExitCode: number;
 
-  constructor(connection: string) {
+  constructor(connection: string, baseExitCode: number) {
     this.log = new Subject<IDbLogMessage>();
     const pgp: IMain = pgPromise();
     this.db = pgp(connection);
     this.initialized = false;
+    this.baseExitCode = baseExitCode;
   }
 
   public async init() {
@@ -23,7 +25,7 @@ export class Db implements IDb {
         cid: uuid(),
         data: e
       });
-      process.exit(1);
+      process.exit(this.baseExitCode + 1);
     });
 
     this.log.next({
@@ -48,7 +50,7 @@ export class Db implements IDb {
         cid: uuid(),
         data: "DB must be initialized before calling getDB()."
       });
-      process.exit(2);
+      process.exit(this.baseExitCode + 2);
     }
 
     return this.db;

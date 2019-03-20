@@ -9,4 +9,5 @@ export type LoggerMessage = {
 export interface ILogger {
   getLog(): Observable<LoggerMessage>;
   mergeLog(l: Observable<LoggerMessage>): void;
+  log(m: LoggerMessage): void;
 }

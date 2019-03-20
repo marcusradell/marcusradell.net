@@ -12,7 +12,11 @@ export class Logger implements ILogger {
     return this.logSubject.asObservable();
   }
 
-  public mergeLog(l: Observable<LoggerMessage>) {
-    l.forEach(m => this.logSubject.next(m));
+  public mergeLog(messages: Observable<LoggerMessage>) {
+    messages.forEach(m => this.log(m));
+  }
+
+  public log(m: LoggerMessage) {
+    this.logSubject.next(m);
   }
 }

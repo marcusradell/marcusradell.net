@@ -3,7 +3,6 @@ import { Logger } from "../services/logger";
 import { WebSocketServer } from "../services/wss";
 import { Db } from "../services/db";
 import { UserCommandTypes, UserLoginCommand } from "../types";
-import { of } from "rxjs";
 import { PathReporter } from "io-ts/lib/PathReporter";
 import uuid from "uuid/v4";
 
@@ -18,19 +17,47 @@ async function run() {
       console.log("\n");
     })
     .then(() => {
-      console.log("logSubject completed.");
+      console.error("logSubject completed.");
       console.log("\n");
+      process.exit(1);
     })
     .catch(e => {
       console.error(e);
       console.log("\n");
+      process.exit(2);
     });
+
+  process.on("uncaughtException", e => {
+    logger.log({
+      cid: uuid(),
+      type: "uncaught_exception",
+      data: {
+        name: e.name,
+        message: e.message,
+        stack: e.stack
+      }
+    });
+    process.exit(3);
+  });
+
+  process.on("unhandledRejection", e => {
+    logger.log({
+      cid: uuid(),
+      type: "uncaught_exception",
+      data: {
+        name: e.name,
+        message: e.message,
+        stack: e.stack
+      }
+    });
+    process.exit(4);
+  });
 
   if (process.env.DB_CONNECTION === undefined) {
     throw new Error("Missing DB_CONNECTION.");
   }
 
-  const db = new Db(process.env.DB_CONNECTION);
+  const db = new Db(process.env.DB_CONNECTION, 100);
   logger.mergeLog(db.getLog());
 
   await db.init();
@@ -47,13 +74,11 @@ async function run() {
       case UserCommandTypes.Login:
         const validationResult = UserLoginCommand.decode(m);
         if (validationResult.isLeft()) {
-          logger.mergeLog(
-            of({
-              type: "server#handle_message>failed",
-              cid: m.cid,
-              data: PathReporter.report(validationResult)
-            })
-          );
+          logger.log({
+            type: "server#handle_message>failed",
+            cid: m.cid,
+            data: PathReporter.report(validationResult)
+          });
           return;
         }
         return db
@@ -63,22 +88,18 @@ async function run() {
             data: m.data
           })
           .then(() => {
-            logger.mergeLog(
-              of({
-                type: "server#handle_message>succeeded",
-                cid: m.cid,
-                data: "User created successfully."
-              })
-            );
+            logger.log({
+              type: "server#handle_message>succeeded",
+              cid: m.cid,
+              data: "User created successfully."
+            });
           });
       default:
-        logger.mergeLog(
-          of({
-            type: "server#handle_message>failed",
-            cid: m.cid,
-            data: `Got unsupported message type <${m.type}>.`
-          })
-        );
+        logger.log({
+          type: "server#handle_message>failed",
+          cid: m.cid,
+          data: `Got unsupported message type <${m.type}>.`
+        });
     }
   });
 

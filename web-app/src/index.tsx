@@ -15,8 +15,6 @@ ws.getMessageStream().forEach(m => {
   console.log(`Recieved message <${m}>.`);
 });
 
-ws.publish("ping");
-
 const appComponent = new AppComponent(ws);
 (window as any).appComponent = appComponent;
 

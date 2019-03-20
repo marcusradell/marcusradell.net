@@ -2,7 +2,7 @@ import { Observable } from "rxjs";
 
 export type Message = {
   type: string;
-  cid: string;
+  clientCid: string;
   data?: any;
 };
 

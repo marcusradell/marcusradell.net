@@ -16,13 +16,13 @@ export class Ws implements IWs {
   }
 
   public publish(type: string, data?: any): string {
-    const cid = uuid();
+    const clientCid = uuid();
     const m = {
       type,
       data,
-      cid
+      clientCid
     };
     this.ws.next(m);
-    return cid;
+    return clientCid;
   }
 }
