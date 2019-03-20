@@ -68,7 +68,7 @@ export class LoginFormComponent {
           )
           .subscribe(state => {
             if (state.submitState.machine === MachineStates.Submitting) {
-              this.ws.publish("user#login", state.formState);
+              this.ws.publish("auth#login", state.formState);
 
               this.components.submitButton.machine[
                 MachineStates.Submitting

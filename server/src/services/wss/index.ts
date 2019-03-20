@@ -19,7 +19,10 @@ export class WebSocketServer implements IWss {
     this.wss.on("connection", (wsc: Ws) => {
       wsc.on("message", (messageString: string) => {
         try {
-          const message: unknown = JSON.parse(messageString);
+          const message: unknown = {
+            ...JSON.parse(messageString),
+            cid: uuid()
+          };
           const validationResult = Message.decode(message);
 
           if (validationResult.isLeft()) {

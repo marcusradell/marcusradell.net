@@ -4,7 +4,8 @@ import { Observable } from "rxjs";
 export const Message = t.intersection([
   t.type({
     type: t.string,
-    cid: t.string
+    cid: t.string,
+    clientCid: t.string
   }),
   t.partial({
     data: t.any
@@ -16,7 +17,7 @@ export type Message = t.TypeOf<typeof Message>;
 export interface IWss {
   getMessages(): Observable<Message>;
   init(): void;
-  getLog(): Observable<Message>;
+  getLog(): Observable<WssLogMessage>;
 }
 
 export enum WssLogTypes {

@@ -2,9 +2,10 @@ import dotenv from "dotenv";
 import { Logger } from "../services/logger";
 import { WebSocketServer } from "../services/wss";
 import { Db } from "../services/db";
-import { UserCommandTypes, UserLoginCommand } from "../types";
 import { PathReporter } from "io-ts/lib/PathReporter";
 import uuid from "uuid/v4";
+import { AuthCommandTypes } from "../components/auth/types";
+import { AuthComponent } from "../components/auth";
 
 async function run() {
   dotenv.config();
@@ -69,31 +70,14 @@ async function run() {
   const wss = new WebSocketServer(parseInt(process.env.PORT, 10));
   logger.mergeLog(wss.getLog());
 
+  const authComponent = new AuthComponent(db);
+  authComponent.init();
+
   wss.getMessages().forEach(m => {
-    switch (m.type) {
-      case UserCommandTypes.Login:
-        const validationResult = UserLoginCommand.decode(m);
-        if (validationResult.isLeft()) {
-          logger.log({
-            type: "server#handle_message>failed",
-            cid: m.cid,
-            data: PathReporter.report(validationResult)
-          });
-          return;
-        }
-        return db
-          .getDb()
-          .none(`insert into users values ($<uuid>, $<data>)`, {
-            uuid: uuid(),
-            data: m.data
-          })
-          .then(() => {
-            logger.log({
-              type: "server#handle_message>succeeded",
-              cid: m.cid,
-              data: "User created successfully."
-            });
-          });
+    const [component] = m.type.split("#");
+    switch (component) {
+      case "auth":
+        return authComponent.processAction(m);
       default:
         logger.log({
           type: "server#handle_message>failed",
