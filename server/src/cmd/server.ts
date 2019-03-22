@@ -70,7 +70,18 @@ async function run() {
   const wss = new WebSocketServer(parseInt(process.env.PORT, 10));
   logger.mergeLog(wss.getLog());
 
-  const authComponent = new AuthComponent(db);
+  if (process.env.SALT_ROUNDS === undefined) {
+    throw new Error("Missing SALT_ROUNDS.");
+  }
+
+  const saltRounds = parseInt(process.env.SALT_ROUNDS);
+
+  if (isNaN(saltRounds)) {
+    throw new Error("saltRounds is NaN.");
+  }
+
+  const authComponent = new AuthComponent(db, saltRounds);
+  logger.mergeLog(authComponent.getLog());
   authComponent.init();
 
   wss.getMessages().forEach(m => {

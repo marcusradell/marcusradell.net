@@ -5,14 +5,19 @@ import { Subject } from "rxjs";
 import uuid from "uuid/v4";
 import { IDb } from "../../services/db/types";
 import { Message } from "../../services/wss/types";
+import * as bcrypt from "bcrypt";
+import { promisify } from "util";
+const bcryptHash = promisify(bcrypt.hash);
 
 export class AuthComponent {
   private log: Subject<LoggerMessage>;
   private db: IDb;
+  private saltRounds: number;
 
-  constructor(db: IDb) {
+  constructor(db: IDb, saltRounds: number) {
     this.db = db;
     this.log = new Subject<LoggerMessage>();
+    this.saltRounds = saltRounds;
   }
 
   public init() {
@@ -38,7 +43,7 @@ export class AuthComponent {
     return this.log.asObservable();
   }
 
-  public login(props: { cid: string; type: string }) {
+  public async login(props: { cid: string; type: string }) {
     const validation = AuthLoginCommand.decode(props);
 
     if (validation.isLeft()) {
@@ -52,20 +57,27 @@ export class AuthComponent {
       return Promise.reject(result);
     }
 
-    const event = validation.value;
+    const hash = await bcryptHash(
+      validation.value.data.password,
+      this.saltRounds
+    );
+    const event = {
+      ...validation.value,
+      data: {
+        ...validation.value.data,
+        password: hash
+      }
+    };
 
-    return this.db
-      .getDb()
-      .none(`insert into auth values ($<uuid>, $<data>)`, {
-        uuid: uuid(),
-        data: event
-      })
-      .then(() => {
-        this.log.next({
-          type: "server#handle_message>succeeded",
-          cid: event.cid,
-          data: "User created successfully."
-        });
-      });
+    await this.db.getDb().none(`insert into auth values ($<uuid>, $<data>)`, {
+      uuid: uuid(),
+      data: event
+    });
+
+    this.log.next({
+      type: "server#handle_message>succeeded",
+      cid: event.cid,
+      data: "User created successfully."
+    });
   }
 }
