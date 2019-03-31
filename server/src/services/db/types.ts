@@ -18,16 +18,10 @@ export type DbInitSucceeded = {
   cid: string;
 };
 
-export type DbGetDbFailed = {
-  type: DbLogTypes.GetDbFailed;
-  cid: string;
-  data: string;
-};
+export type IDbLogMessage = DbInitSucceeded | DbInitFailed;
 
-export type IDbLogMessage = DbInitSucceeded | DbInitFailed | DbGetDbFailed;
-
-export interface IDb {
+export interface IDbModel {
   getLog: () => Observable<IDbLogMessage>;
-  init: () => Promise<void>;
+  ensureConnection: () => Promise<void>;
   getDb: () => IDatabase<any>;
 }

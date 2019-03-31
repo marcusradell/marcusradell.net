@@ -14,7 +14,7 @@ export const Message = t.intersection([
 
 export type Message = t.TypeOf<typeof Message>;
 
-export interface IWss {
+export interface IWssModel {
   getMessages(): Observable<Message>;
   init(): void;
   getLog(): Observable<WssLogMessage>;
