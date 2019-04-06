@@ -49,10 +49,9 @@ function createEndpoints<Reducers extends { [k: string]: Reducer<any, any> }>(
 }
 
 function createStore<
-  Keys extends string,
   Endpoints extends { [k: string]: Endpoint<Store, any> },
-  Machine extends { [k in Keys]: Endpoints },
-  Store extends { state: Keys }
+  Machine extends { [k: string]: Endpoints },
+  Store extends { state: keyof Machine }
 >(machine: Machine, initialStore: Store) {
   const keys = Object.keys(machine) as Array<keyof Machine>;
   const updaters = keys.reduce(
@@ -92,10 +91,10 @@ function createStore<
 }
 
 export function createMachine<
-  Store extends { state: string },
   Chart extends {
     [k: string]: { [k: string]: Reducer<Store, any> };
-  }
+  },
+  Store extends { state: keyof Chart }
 >(chart: Chart, initialStore: Store) {
   const keys = Object.keys(chart) as Array<keyof Chart>;
   const machine = keys.reduce(
