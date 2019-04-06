@@ -73,14 +73,14 @@ function createStore<
 
   // Start listen to all the state updaters in the machine's initial state.
   // Each time the machine state changes, we will switch to the current updater stream.
-  const currentTransitionsStream = doTransitionSubject.pipe<any, any>(
-    startWith(updaters[initialStore.state]),
+  const currentTransitionsStream = doTransitionSubject.pipe(
+    startWith<Observable<(s: Store) => Store>>(updaters[initialStore.state]),
     switchMap(stream => stream)
   );
 
   const store: Observable<Store> = currentTransitionsStream.pipe(
-    startWith(initialStore),
-    scan<(s: Store) => Store, Store>((state, updater) => updater(state)),
+    startWith<any>(initialStore),
+    scan<(s: Store) => Store, Store>((store, updater) => updater(store)),
     tap(store => {
       const currentState = store.state;
       doTransitionSubject.next(updaters[currentState]);
@@ -93,22 +93,22 @@ function createStore<
 
 export function createMachine<
   Store extends { state: string },
-  Configuration extends {
+  Chart extends {
     [k: string]: { [k: string]: Reducer<Store, any> };
   }
->(configuration: Configuration, initialStore: Store) {
-  const keys = Object.keys(configuration) as Array<keyof Configuration>;
+>(chart: Chart, initialStore: Store) {
+  const keys = Object.keys(chart) as Array<keyof Chart>;
   const machine = keys.reduce(
     (acc, key) => {
-      const endpoints = createEndpoints(configuration[key]);
+      const endpoints = createEndpoints(chart[key]);
       acc[key] = endpoints;
       return acc;
     },
     {} as {
-      [k in keyof Configuration]: {
-        [kk in keyof Configuration[k]]: Endpoint<
-          ReducerArgs<Configuration[k][kk]>[0],
-          ReducerArgs<Configuration[k][kk]>[1]
+      [k in keyof Chart]: {
+        [kk in keyof Chart[k]]: Endpoint<
+          ReducerArgs<Chart[k][kk]>[0],
+          ReducerArgs<Chart[k][kk]>[1]
         >
       }
     }

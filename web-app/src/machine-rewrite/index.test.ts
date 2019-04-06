@@ -1,15 +1,8 @@
 import { createMachine, Reducer } from "./index";
-import { take } from "rxjs/operators";
-import { Observable } from "rxjs";
-
-type Store = {
-  // TODO: Fix so it works with unioned string literals.
-  // state: "initial" | "ended";
-  state: string;
-};
+import { skip, take } from "rxjs/operators";
 
 test("createMachine", async () => {
-  const configuration = {
+  const chart = {
     initial: {
       end: (s: Store, data: string) => ({
         state: "ended",
@@ -24,15 +17,26 @@ test("createMachine", async () => {
     }
   };
 
+  type Store = {
+    // TODO: Fix so it works with unioned string literals.
+    // state: keyof typeof configuration;
+    state: string;
+  };
+
   const initialState = {
     state: "initial"
   };
 
-  const { machine, store } = createMachine(configuration, initialState);
+  const { machine, store } = createMachine(chart, initialState);
 
-  const result = await store.pipe(take(1)).toPromise();
+  const result = store
+    .pipe(
+      skip(1),
+      take(1)
+    )
+    .toPromise();
 
-  machine.ended.restart.trigger(1);
+  machine.initial.end.trigger("foo");
 
-  expect(result).toEqual(2);
+  expect(await result).toEqual({ state: "ended", data: "foo" });
 });
