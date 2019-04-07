@@ -15,18 +15,18 @@ export class LoginFormComponent {
 
   constructor(ws: IWs) {
     const nickname = new InputComponent(
-      s => s.data.length >= minNicknameLength,
+      s => s.ctx.length >= minNicknameLength,
       s =>
         `Nickname is ${
-          s.data.length
+          s.ctx.length
         } characters and needs to be at least ${minNicknameLength}.`
     );
 
     const password = new InputComponent(
-      s => s.data.length >= minPasswordLength,
+      s => s.ctx.length >= minPasswordLength,
       s =>
         `Password is currently ${
-          s.data.length
+          s.ctx.length
         } characters and needs to be at least ${minPasswordLength}.`
     );
 
@@ -55,13 +55,13 @@ export class LoginFormComponent {
         const subscription = this.components.submitButton.stateStream
           .pipe(
             withLatestFrom(
-              this.components.nickname.stateStream,
-              this.components.password.stateStream,
+              this.components.nickname.rxm.store,
+              this.components.password.rxm.store,
               (submitState, nicknameState, passwordState) => ({
                 submitState,
                 formState: {
-                  nickname: nicknameState.data,
-                  password: passwordState.data
+                  nickname: nicknameState.ctx,
+                  password: passwordState.ctx
                 }
               })
             )

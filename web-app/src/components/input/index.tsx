@@ -1,39 +1,27 @@
 import { ValidationComponent, Predicate, ErrorMessage } from "../validation";
 import { createMachine } from "../../machine";
-import { State, MachineState } from "./types";
-import { Reducers } from "./types";
+import { Store } from "./types";
 import { initialState, reducers } from "./model";
-import { Machine } from "../../machine/types";
 import React, { useEffect, useState, ChangeEvent } from "react";
-import { Observable } from "rxjs";
 export * from "./types";
 
 export class InputComponent {
-  public machine: Machine<State, Reducers>;
-  public stateStream: Observable<State>;
+  public rxm = createMachine(reducers, initialState);
   public validationComponent: ValidationComponent;
 
-  constructor(predicate: Predicate<State>, errorMessage: ErrorMessage<State>) {
-    const [machine, stateStream] = createMachine<State, Reducers>(
-      reducers,
-      initialState
-    );
-
-    this.machine = machine;
-    this.stateStream = stateStream;
-
+  constructor(predicate: Predicate<Store>, errorMessage: ErrorMessage<Store>) {
     this.validationComponent = new ValidationComponent(
       predicate,
       errorMessage,
-      stateStream
+      this.rxm.store
     );
   }
 
-  public onChange(machineState: MachineState) {
+  public onChange(state: Store["state"]) {
     return (e: ChangeEvent<HTMLInputElement>) => {
       const { value } = e.target;
 
-      this.machine[machineState].actions.edit.trigger(value);
+      this.rxm.machine[state].edit.trigger(value);
     };
   }
 
@@ -41,10 +29,10 @@ export class InputComponent {
     const Validation = this.validationComponent.createView();
 
     return () => {
-      const [state, setState] = useState(initialState);
+      const [store, setState] = useState(initialState);
 
       useEffect(() => {
-        const subscription = this.stateStream.subscribe(x => {
+        const subscription = this.rxm.store.subscribe(x => {
           setState(x);
         });
 
@@ -56,8 +44,8 @@ export class InputComponent {
           <input
             className="form-control form-control-lg"
             type={type}
-            value={state.data}
-            onChange={this.onChange(state.machine)}
+            value={store.ctx}
+            onChange={this.onChange(store.state)}
           />
           <div>
             <Validation />

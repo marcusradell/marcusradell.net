@@ -7,96 +7,113 @@ import {
   tap,
   shareReplay
 } from "rxjs/operators";
-import {
-  Reducer,
-  MachineNodeAction,
-  Updater,
-  Reducers,
-  MachineReducers,
-  MachineNode,
-  Machine,
-  MachineState
-} from "./types";
+import { Reducer, Endpoint, ReducerArgs } from "./types";
 export * from "./types";
 
-function createMachineNodeAction<E, S>(
-  reducer: Reducer<E, S>
-): MachineNodeAction<E, S> {
-  const subject = new Subject<E>();
+function createEndpoint<Store, Action>(reducer: Reducer<Store, Action>) {
+  const subject = new Subject<Action>();
 
-  function trigger(x?: E) {
+  function trigger(x: Action) {
     subject.next(x);
   }
 
-  const stream: Observable<E> = subject.asObservable();
-  const updater: Observable<Updater<S>> = subject.pipe(
-    map((x: E) => reducer(x))
+  const updater: Observable<(s: Store) => Store> = subject.pipe(
+    map((a: Action) => (s: Store) => reducer(s, a))
   );
 
-  const result: MachineNodeAction<E, S> = { trigger, stream, updater };
-  return result;
+  return { trigger, updater } as const;
 }
 
-function createUpdater<S, A>(mn: MachineNode<S, A>): Observable<Updater<S>> {
-  return merge(
-    ...Object.values<MachineNodeAction<any, S>>(mn.actions).map(x => x.updater)
-  );
-}
+function createEndpoints<Reducers extends { [k: string]: Reducer<any, any> }>(
+  reducers: Reducers
+) {
+  const keys = Object.keys(reducers) as (keyof Reducers)[];
 
-function createMachineNode<S, A>(reducers: Reducers<S, A>): MachineNode<S, A> {
-  let result: MachineNode<S, A> = (Object.keys(reducers) as (keyof A)[]).reduce(
-    (mn, k) => {
-      mn.actions[k] = createMachineNodeAction(reducers[k]);
-      return mn;
+  const endpoints = keys.reduce(
+    (acc, key) => {
+      type Args = ReducerArgs<Reducers[typeof key]>;
+      acc[key] = createEndpoint<Args[0], Args[1]>(reducers[key]);
+      return acc;
     },
-    { actions: {} } as MachineNode<S, A>
+    {} as {
+      [k in keyof Reducers]: {
+        trigger: (a: ReducerArgs<Reducers[k]>[1]) => void;
+        updater: Observable<
+          (s: ReducerArgs<Reducers[k]>[0]) => ReducerArgs<Reducers[k]>[0]
+        >;
+      }
+    }
   );
 
-  result.updater = createUpdater<S, A>(result);
-
-  return result;
+  return endpoints;
 }
 
-function createMachineState<S, N>(
-  machine: Machine<S, N>,
-  initialState: S
-): Observable<MachineState<S>> {
-  // Will be triggered each time the state changes (should add distinctUntilChanged).
+function createStore<
+  Endpoints extends { [k: string]: Endpoint<Store, any> },
+  Machine extends { [k: string]: Endpoints },
+  Store extends { state: keyof Machine }
+>(machine: Machine, initialStore: Store) {
+  const keys = Object.keys(machine) as Array<keyof Machine>;
+  const updaters = keys.reduce(
+    (acc, key) => {
+      const kkeys = Object.keys(machine[key]) as Array<
+        keyof Machine[typeof key]
+      >;
+      const updater = merge(...kkeys.map(kkey => machine[key][kkey].updater));
+      acc[key] = updater;
+      return acc;
+    },
+    {} as { [k in keyof Machine]: Observable<(s: Store) => Store> }
+  );
+
+  // Will be triggered each time the state changes.
+  // TODO: should add distinctUntilChanged).
   const doTransitionSubject = new Subject<any>();
 
   // Start listen to all the state updaters in the machine's initial state.
   // Each time the machine state changes, we will switch to the current updater stream.
-  const currentTransitionsStream = doTransitionSubject.pipe<any, any>(
-    startWith((machine as any)[(initialState as any).machine].updater),
+  const currentTransitionsStream = doTransitionSubject.pipe(
+    startWith<Observable<(s: Store) => Store>>(updaters[initialStore.state]),
     switchMap(stream => stream)
   );
 
-  const ms: Observable<MachineState<S>> = currentTransitionsStream.pipe(
-    startWith(initialState),
-    scan<Updater<S>, S>((state, updater) => updater(state)),
-    tap(state =>
-      doTransitionSubject.next((machine as any)[(state as any).machine].updater)
-    ),
+  const store: Observable<Store> = currentTransitionsStream.pipe(
+    startWith<any>(initialStore),
+    scan<(s: Store) => Store, Store>((store, updater) => updater(store)),
+    tap(store => {
+      const currentState = store.state;
+      doTransitionSubject.next(updaters[currentState]);
+    }),
     shareReplay(1)
   );
 
-  return ms;
+  return store;
 }
 
-export function createMachine<S, N>(
-  machineReducers: MachineReducers<S, N>,
-  initialState: S
-): [Machine<S, N>, Observable<MachineState<S>>] {
-  const machine: Machine<S, N> = Object.keys(machineReducers).reduce(
-    (m, k) => {
-      const nodeReducers = machineReducers[k as keyof N];
-      m[k as keyof N] = createMachineNode<S, N[keyof N]>(nodeReducers);
-      return m;
+export function createMachine<
+  Chart extends {
+    [k: string]: { [k: string]: Reducer<Store, any> };
+  },
+  Store extends { state: keyof Chart }
+>(chart: Chart, initialStore: Store) {
+  const keys = Object.keys(chart) as Array<keyof Chart>;
+  const machine = keys.reduce(
+    (acc, key) => {
+      const endpoints = createEndpoints(chart[key]);
+      acc[key] = endpoints;
+      return acc;
     },
-    {} as Machine<S, N>
+    {} as {
+      [k in keyof Chart]: {
+        [kk in keyof Chart[k]]: Endpoint<
+          ReducerArgs<Chart[k][kk]>[0],
+          ReducerArgs<Chart[k][kk]>[1]
+        >
+      }
+    }
   );
 
-  const machineState = createMachineState(machine, initialState);
+  const store = createStore(machine, initialStore);
 
-  return [machine, machineState];
+  return { machine, store };
 }

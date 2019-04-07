@@ -1,4 +1,4 @@
-import { State as InputState } from "../input";
+import { Store as InputStore } from "../input";
 
 export enum MachineStates {
   Initial = "initial",
@@ -25,5 +25,5 @@ export type ErrorMessage<InputState> = (s: InputState) => string;
 
 export type ViewState = {
   self: State;
-  input: InputState | null;
+  input: InputStore | null;
 };

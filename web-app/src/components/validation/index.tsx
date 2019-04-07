@@ -1,7 +1,7 @@
-import { createMachine } from "../../machine";
+import { createMachine } from "../../old_machine";
 import React, { useEffect, useState } from "react";
 import { createReducers, initialState } from "./model";
-import { Machine } from "../../machine/types";
+import { Machine } from "../../old_machine/types";
 import {
   State,
   Reducers,
@@ -11,22 +11,22 @@ import {
   ErrorMessage
 } from "./types";
 import { Observable } from "rxjs";
-import { State as InputState } from "../input";
+import { Store as InputStore } from "../input";
 import { tap, withLatestFrom, skip } from "rxjs/operators";
 export * from "./types";
 
 export class ValidationComponent {
   public machine: Machine<State, Reducers>;
   public stateStream: Observable<State>;
-  private inputStateStream: Observable<InputState>;
+  private inputStateStream: Observable<InputStore>;
 
   constructor(
-    predicate: Predicate<InputState>,
-    errorMessage: ErrorMessage<InputState>,
-    inputStateStream: Observable<InputState>
+    predicate: Predicate<InputStore>,
+    errorMessage: ErrorMessage<InputStore>,
+    inputStateStream: Observable<InputStore>
   ) {
     const [machine, machineState] = createMachine(
-      createReducers<InputState>(predicate, errorMessage),
+      createReducers<InputStore>(predicate, errorMessage),
       initialState
     );
     this.machine = machine;

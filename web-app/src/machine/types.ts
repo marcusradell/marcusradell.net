@@ -1,26 +1,26 @@
 import { Observable } from "rxjs";
 
-export type Updater<S> = (state: S) => S;
+export type ReducerArgs<
+  T extends (store: any, action: any) => any
+> = T extends (store: infer S, action: infer A) => typeof store
+  ? [S, A]
+  : never;
 
-export type Reducer<E, S> = (event: E) => Updater<S>;
+export type Reducer<Store, Action> = (s: Store, a: Action) => Store;
 
-export type Reducers<S, A> = { [k in keyof A]: Reducer<any, S> };
+// export type EndpointArgs<
+//   T extends {
+//     trigger: (a: any) => void;
+//     updater: Observable<(s: any) => typeof s>;
+//   }
+// > = T extends {
+//   trigger: (a: infer A) => void;
+//   updater: Observable<(s: infer S) => typeof s>;
+// }
+//   ? [S, A]
+//   : never;
 
-export type Trigger<E> = (x?: E) => void;
-
-export type MachineNodeAction<E, S> = {
-  trigger: Trigger<E>;
-  stream: Observable<E>;
-  updater: Observable<Updater<S>>;
+export type Endpoint<Store, Action> = {
+  trigger: (a: Action) => void;
+  updater: Observable<(s: Store) => Store>;
 };
-
-export type MachineReducers<S, N> = { [k in keyof N]: Reducers<S, N[k]> };
-
-export type MachineNode<S, A> = {
-  actions: { [k in keyof A]: MachineNodeAction<any, S> };
-  updater: Observable<any>;
-};
-
-export type Machine<S, N> = { [k in keyof N]: MachineNode<S, N[k]> };
-
-export type MachineState<S> = any;

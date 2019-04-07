@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Observable, combineLatest } from "rxjs";
 import { useState, useEffect } from "react";
-import { createMachine, Machine } from "../../machine";
+import { createMachine, Machine } from "../../old_machine";
 import { State, Reducers, MachineStates } from "./types";
 import { initialState, reducers } from "./model";
 import { ValidationComponent } from "../validation";

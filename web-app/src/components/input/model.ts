@@ -1,15 +1,15 @@
-import { State, Reducers, MachineState } from "./types";
+import { Store } from "./types";
 
-export const initialState: State = {
-  machine: MachineState.Initial,
-  data: ""
+export const initialState: Store = {
+  state: "editing",
+  ctx: ""
 };
 
-export const reducers: Reducers = {
-  initial: {
-    edit: (data: string) => (s: State) => ({
+export const reducers = {
+  editing: {
+    edit: (s: Store, ctx: string) => ({
       ...s,
-      data
+      ctx
     })
   }
 };

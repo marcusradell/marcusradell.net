@@ -1,87 +1,47 @@
-import { createMachine } from ".";
-import { take, reduce } from "rxjs/operators";
+import { createMachine } from "./index";
+import { skip, take } from "rxjs/operators";
 
-type State = {
-  machine: "initial" | "edit";
-  data: string;
-};
-
-test("machine trigger and stream", () => {
-  type MachineReducers = {
+test("createMachine", async () => {
+  const chart = {
     initial: {
-      setValue: (data: string) => (s: State) => State;
-    };
-  };
-
-  const initialState: State = { machine: "initial", data: "" };
-  const machineReducers: MachineReducers = {
-    initial: {
-      setValue: (data: string) => (s: State) => ({ ...s, data })
-    }
-  };
-  const [m] = createMachine<State, MachineReducers>(
-    machineReducers,
-    initialState
-  );
-  const r = m.initial.actions.setValue.stream.pipe(take(1)).forEach(x => {
-    expect(x).toEqual("abc");
-  });
-  m.initial.actions.setValue.trigger("abc");
-  return r;
-});
-
-test("machine action updater", () => {
-  type MachineReducers = {
-    initial: {
-      setValue: (data: string) => (s: State) => State;
-    };
-    edit: {
-      setValue: (data: string) => (s: State) => State;
-      resetValue: () => (s: State) => State;
-    };
-  };
-
-  const initialState: State = { machine: "initial", data: "" };
-
-  const machineReducers: MachineReducers = {
-    initial: {
-      setValue: (data: string) => (s: State) => ({
-        ...s,
-        data,
-        machine: "edit"
+      end: (s: Store, ctx: string): Store => ({
+        state: "ended",
+        ctx
       })
     },
-    edit: {
-      setValue: (data: string) => (s: State) => ({ ...s, data }),
-      resetValue: () => (s: State) => ({ ...s, data: "" })
+    ended: {
+      restart: (s: Store, ctx: number): Store => ({
+        state: "initial",
+        ctx
+      })
     }
   };
 
-  const [machine, machineState] = createMachine<State, MachineReducers>(
-    machineReducers,
-    initialState
-  );
+  type Store =
+    | {
+        state: "initial";
+        ctx: number;
+      }
+    | {
+        state: "ended";
+        ctx: string;
+      };
 
-  const r = machineState
+  const initialStore = {
+    state: "initial",
+    ctx: 123
+  } as Store;
+
+  const { machine, store } = createMachine(chart, initialStore);
+
+  const result = store
     .pipe(
-      take(4),
-      reduce<any, any[]>((acc, val) => {
-        acc.push(val);
-        return acc;
-      }, [])
+      skip(1),
+      take(1)
     )
-    .forEach(state => {
-      expect(state).toEqual([
-        { data: "", machine: "initial" },
-        { data: "abc", machine: "edit" },
-        { data: "123", machine: "edit" },
-        { data: "", machine: "edit" }
-      ]);
-    });
+    .toPromise();
 
-  machine.initial.actions.setValue.trigger("abc");
-  machine.edit.actions.setValue.trigger("123");
-  machine.edit.actions.resetValue.trigger(null);
+  machine.initial.end.trigger("foo");
 
-  return r;
+  expect(await result).toEqual({ state: "ended", ctx: "foo" });
 });
