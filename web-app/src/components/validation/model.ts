@@ -1,23 +1,37 @@
-import { Store, Predicate, ErrorMessage } from "./types";
+import { Store, Predicate, ErrorMessage, Chart } from "./types";
 
-export const initialStore: Store = {
-  state: "initial",
-  data: ""
-};
-
-export function createReducers<InputState>(
-  predicate: Predicate<InputState>,
-  errorMessage: ErrorMessage<InputState>
+export function createModel<InputStore>(
+  predicate: Predicate<InputStore>,
+  errorMessage: ErrorMessage<InputStore>
 ) {
-  function validate(s: Store, inputState: InputState): Store {
+  function validate(store: Store, inputStore: InputStore): Store {
+    const state = predicate(inputStore) ? "valid" : "invalid";
+
+    if (state === "invalid") {
+      const ctx = errorMessage(inputStore);
+
+      return {
+        ...store,
+        state,
+        ctx
+      };
+    }
+
+    const ctx = null;
+
     return {
-      ...s,
-      state: predicate(inputState) ? "valid" : "invalid",
-      data: predicate(inputState) ? s.data : errorMessage(inputState)
+      ...store,
+      state,
+      ctx
     };
   }
 
-  const reducers = {
+  const initialStore: Store = {
+    state: "initial",
+    ctx: null
+  };
+
+  const chart: Chart<InputStore> = {
     initial: {
       validate
     },
@@ -29,5 +43,5 @@ export function createReducers<InputState>(
     }
   };
 
-  return reducers;
+  return { initialStore, chart };
 }

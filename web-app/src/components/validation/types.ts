@@ -1,15 +1,28 @@
-import { Store as InputStore } from "../input/component";
+export type Store =
+  | { state: "initial"; ctx: null }
+  | { state: "valid"; ctx: null }
+  | {
+      state: "invalid";
+      ctx: string;
+    };
 
-export type Store = {
-  state: "initial" | "valid" | "invalid";
-  data: string;
+export type Chart<InputStore> = {
+  initial: {
+    validate(store: Store, inputStore: InputStore): Store;
+  };
+  valid: {
+    validate(store: Store, inputStore: InputStore): Store;
+  };
+  invalid: {
+    validate(store: Store, inputStore: InputStore): Store;
+  };
 };
 
 export type Predicate<InputStore> = (s: InputStore) => boolean;
 
 export type ErrorMessage<InputStore> = (s: InputStore) => string;
 
-export type ViewState = {
+export type ViewStore<InputStore> = {
   self: Store;
   input: InputStore | null;
 };

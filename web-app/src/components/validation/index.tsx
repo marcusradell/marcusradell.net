@@ -1,7 +1,14 @@
 import { createRxm } from "../../rx-machine";
 import React, { useEffect, useState } from "react";
-import { createReducers, initialStore } from "./model";
-import { ViewState, Predicate, ErrorMessage, ValidationModule } from "./types";
+import { createModel } from "./model";
+import {
+  ViewStore,
+  Predicate,
+  ErrorMessage,
+  ValidationModule,
+  Chart,
+  Store
+} from "./types";
 import { Observable } from "rxjs";
 import { Store as InputStore } from "../input/component";
 import { tap, withLatestFrom, skip } from "rxjs/operators";
@@ -12,15 +19,19 @@ export function createValidationModule(
   errorMessage: ErrorMessage<InputStore>,
   inputStateStream: Observable<InputStore>
 ): ValidationModule {
-  const rxm = createRxm(
-    createReducers<InputStore>(predicate, errorMessage),
+  const { chart, initialStore } = createModel<InputStore>(
+    predicate,
+    errorMessage
+  );
+  const [store, machine] = createRxm<Chart<InputStore>, Store>(
+    chart,
     initialStore
   );
 
   return {
     createView() {
       return () => {
-        const [store, setState] = useState<ViewState>({
+        const [viewStore, setViewStore] = useState<ViewStore<InputStore>>({
           self: initialStore,
           input: null
         });
@@ -29,25 +40,25 @@ export function createValidationModule(
           const validatorSubscription = inputStateStream
             .pipe(
               skip(1),
-              withLatestFrom(rxm.store, (inputState, store) => ({
+              withLatestFrom(store, (inputState, store) => ({
                 inputState,
                 store
               })),
               tap(({ inputState, store }) => {
-                rxm.machine[store.state].validate.trigger(inputState);
+                machine[store.state].validate.trigger(inputState);
               })
             )
             .subscribe(() => {});
 
-          const storeSubscription = rxm.store
+          const storeSubscription = store
             .pipe(
               withLatestFrom(inputStateStream, (self, input) => ({
                 self,
                 input
               }))
             )
-            .subscribe(viewState => {
-              setState(viewState);
+            .subscribe(nextViewStore => {
+              setViewStore(nextViewStore);
             });
 
           return () => {
@@ -56,11 +67,11 @@ export function createValidationModule(
           };
         }, []);
 
-        switch (store.self.state) {
+        switch (viewStore.self.state) {
           case "initial":
             return <span>&nbsp;</span>;
           case "invalid":
-            return <span className="text-warning">{store.self.data}</span>;
+            return <span className="text-warning">{viewStore.self.ctx}</span>;
           case "valid":
             return <span className="text-success">OK!</span>;
         }
