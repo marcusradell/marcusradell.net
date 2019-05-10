@@ -6,6 +6,8 @@ export type ReducerArgs<
   ? [S, A]
   : never;
 
+export type Reducers<Obj> = { [k in keyof Obj]: Reducer<any, any> };
+
 export type Reducer<Store, Action> = (s: Store, a: Action) => Store;
 
 // export type EndpointArgs<
@@ -19,6 +21,13 @@ export type Reducer<Store, Action> = (s: Store, a: Action) => Store;
 // }
 //   ? [S, A]
 //   : never;
+
+export type Endpoints<Obj> = {
+  [k in keyof Reducers<Obj>]: Endpoint<
+    ReducerArgs<Reducers<Obj>[k]>[0],
+    ReducerArgs<Reducers<Obj>[k]>[1]
+  >
+};
 
 export type Endpoint<Store, Action> = {
   trigger: (a: Action) => void;

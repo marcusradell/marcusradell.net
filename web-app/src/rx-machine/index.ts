@@ -7,7 +7,7 @@ import {
   tap,
   shareReplay
 } from "rxjs/operators";
-import { Reducer, Endpoint, ReducerArgs } from "./types";
+import { Reducer, Endpoint, ReducerArgs, Reducers, Endpoints } from "./types";
 export * from "./types";
 
 function createEndpoint<Store, Action>(
@@ -26,34 +26,32 @@ function createEndpoint<Store, Action>(
   return { trigger, updater } as const;
 }
 
-function createEndpoints<Reducers extends { [k: string]: Reducer<any, any> }>(
-  reducers: Reducers
+function createEndpoints<Obj>(
+  reducers: Reducers<Obj>
 ): {
-  [k in keyof Reducers]: Endpoint<
-    ReducerArgs<Reducers[k]>[0],
-    ReducerArgs<Reducers[k]>[1]
+  [k in keyof Reducers<Obj>]: Endpoint<
+    ReducerArgs<Reducers<Obj>[k]>[0],
+    ReducerArgs<Reducers<Obj>[k]>[1]
   >
 } {
-  const keys = Object.keys(reducers) as (keyof Reducers)[];
+  const keys = Object.keys(reducers) as (keyof Reducers<Obj>)[];
 
   const endpoints = keys.reduce(
     (acc, key) => {
-      type Args = ReducerArgs<Reducers[typeof key]>;
+      type Args = ReducerArgs<Reducers<Obj>[typeof key]>;
       acc[key] = createEndpoint<Args[0], Args[1]>(reducers[key]);
       return acc;
     },
     {} as {
-      [k in keyof Reducers]: Endpoint<
-        ReducerArgs<Reducers[k]>[0],
-        ReducerArgs<Reducers[k]>[1]
+      [k in keyof Reducers<Obj>]: Endpoint<
+        ReducerArgs<Reducers<Obj>[k]>[0],
+        ReducerArgs<Reducers<Obj>[k]>[1]
       >
     }
   );
 
   return endpoints;
 }
-
-// TODO: Keep filling in return types.
 
 function createStore<
   Endpoints extends { [k: string]: Endpoint<Store, any> },
@@ -106,7 +104,9 @@ export function createMachine<
   const keys = Object.keys(chart) as Array<keyof Chart>;
   const machine = keys.reduce(
     (acc, key) => {
-      const endpoints = createEndpoints(chart[key]);
+      const endpoints: Endpoints<Chart[keyof Chart]> = createEndpoints<
+        Chart[keyof Chart]
+      >(chart[key]);
       acc[key] = endpoints;
       return acc;
     },
