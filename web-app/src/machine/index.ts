@@ -10,7 +10,9 @@ import {
 import { Reducer, Endpoint, ReducerArgs } from "./types";
 export * from "./types";
 
-function createEndpoint<Store, Action>(reducer: Reducer<Store, Action>) {
+function createEndpoint<Store, Action>(
+  reducer: Reducer<Store, Action>
+): Endpoint<Store, Action> {
   const subject = new Subject<Action>();
 
   function trigger(x: Action) {
@@ -26,7 +28,12 @@ function createEndpoint<Store, Action>(reducer: Reducer<Store, Action>) {
 
 function createEndpoints<Reducers extends { [k: string]: Reducer<any, any> }>(
   reducers: Reducers
-) {
+): {
+  [k in keyof Reducers]: Endpoint<
+    ReducerArgs<Reducers[k]>[0],
+    ReducerArgs<Reducers[k]>[1]
+  >
+} {
   const keys = Object.keys(reducers) as (keyof Reducers)[];
 
   const endpoints = keys.reduce(
@@ -36,17 +43,17 @@ function createEndpoints<Reducers extends { [k: string]: Reducer<any, any> }>(
       return acc;
     },
     {} as {
-      [k in keyof Reducers]: {
-        trigger: (a: ReducerArgs<Reducers[k]>[1]) => void;
-        updater: Observable<
-          (s: ReducerArgs<Reducers[k]>[0]) => ReducerArgs<Reducers[k]>[0]
-        >;
-      }
+      [k in keyof Reducers]: Endpoint<
+        ReducerArgs<Reducers[k]>[0],
+        ReducerArgs<Reducers[k]>[1]
+      >
     }
   );
 
   return endpoints;
 }
+
+// TODO: Keep filling in return types.
 
 function createStore<
   Endpoints extends { [k: string]: Endpoint<Store, any> },

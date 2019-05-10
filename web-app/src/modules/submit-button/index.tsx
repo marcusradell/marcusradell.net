@@ -4,16 +4,16 @@ import { useState, useEffect } from "react";
 import { createMachine, Machine } from "../../old_machine";
 import { State, Reducers, MachineStates } from "./types";
 import { initialState, reducers } from "./model";
-import { ValidationComponent } from "../validation";
-import { map, tap } from "rxjs/operators";
-import { MachineStates as ValidationMachineStates } from "../validation";
+import { ValidationModule } from "../validation";
+import { map } from "rxjs/operators";
+import { Store as ValidationMachineStates } from "../validation";
 
 export class SubmitButtonComponent {
   public machine: Machine<State, Reducers>;
   public stateStream: Observable<State>;
   private validStream: Observable<boolean>;
 
-  constructor(validationComponents: ValidationComponent[]) {
+  constructor(validationModules: ValidationModule[]) {
     const [machine, stateStream] = createMachine<State, Reducers>(
       reducers,
       initialState
@@ -22,7 +22,8 @@ export class SubmitButtonComponent {
     this.stateStream = stateStream;
 
     this.validStream = combineLatest(
-      validationComponents.map(c => c.stateStream)
+      // TODO: Fix typing
+      validationModules.map(validationModule => validationModule.rxm.store)
     ).pipe(
       map(states =>
         states.every(s => s.machine === ValidationMachineStates.Valid)

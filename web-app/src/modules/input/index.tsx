@@ -1,4 +1,9 @@
-import { ValidationComponent, Predicate, ErrorMessage } from "../validation";
+import {
+  createValidationModule,
+  Predicate,
+  ErrorMessage,
+  ValidationModule
+} from "../validation";
 import { createMachine } from "../../machine";
 import { Store } from "./types";
 import { initialState, reducers } from "./model";
@@ -7,10 +12,10 @@ export * from "./types";
 
 export class InputComponent {
   public rxm = createMachine(reducers, initialState);
-  public validationComponent: ValidationComponent;
+  public validationModule: ValidationModule;
 
   constructor(predicate: Predicate<Store>, errorMessage: ErrorMessage<Store>) {
-    this.validationComponent = new ValidationComponent(
+    this.validationModule = createValidationModule(
       predicate,
       errorMessage,
       this.rxm.store
@@ -26,7 +31,7 @@ export class InputComponent {
   }
 
   public createView(type: "text" | "password") {
-    const Validation = this.validationComponent.createView();
+    const Validation = this.validationModule.createView();
 
     return () => {
       const [store, setState] = useState(initialState);

@@ -31,8 +31,8 @@ export class LoginFormComponent {
     );
 
     const submitButton = new SubmitButtonComponent([
-      nickname.validationComponent,
-      password.validationComponent
+      nickname.validationModule,
+      password.validationModule
     ]);
 
     this.components = {

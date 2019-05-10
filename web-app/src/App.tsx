@@ -1,5 +1,5 @@
 import React from "react";
-import { LoginFormComponent } from "./components/login-form";
+import { LoginFormComponent } from "./modules/login-form";
 import { IWs } from "./services/ws";
 
 export class AppComponent {

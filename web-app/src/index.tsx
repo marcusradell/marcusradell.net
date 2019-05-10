@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { AppComponent } from "./app";
-import "./components/input";
+import "./modules/input";
 import * as serviceWorker from "./serviceWorker";
 import { Ws, IWs } from "./services/ws";
 
