@@ -1,4 +1,4 @@
-import { createMachine } from "../../machine";
+import { createMachine } from "../../rx-machine";
 import React, { useEffect, useState } from "react";
 import { createReducers, initialStore } from "./model";
 import { ViewState, Predicate, ErrorMessage, ValidationModule } from "./types";

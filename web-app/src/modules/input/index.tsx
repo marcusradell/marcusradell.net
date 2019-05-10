@@ -4,7 +4,7 @@ import {
   ErrorMessage,
   ValidationModule
 } from "../validation";
-import { createMachine } from "../../machine";
+import { createMachine } from "../../rx-machine";
 import { Store } from "./types";
 import { initialState, reducers } from "./model";
 import React, { useEffect, useState, ChangeEvent } from "react";
