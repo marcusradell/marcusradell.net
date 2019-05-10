@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { Components } from "./types";
-import { InputComponent } from "../input";
+import { InputComponent } from "../input/component";
 import { SubmitButtonComponent } from "../submit-button";
 import { MachineStates } from "../submit-button/types";
 import { withLatestFrom } from "rxjs/operators";

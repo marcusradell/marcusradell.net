@@ -1,4 +1,4 @@
-import { Store as InputStore } from "../input";
+import { Store as InputStore } from "../input/component";
 
 export type Store = {
   state: "initial" | "valid" | "invalid";

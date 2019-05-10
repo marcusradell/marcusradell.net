@@ -6,7 +6,7 @@ import {
 } from "../validation";
 import { createRxm, Rxm } from "../../rx-machine";
 import { Store, Chart } from "./types";
-import { initialStore, chart } from "./model";
+import { initialStore, chart } from "./machine";
 import React, { useEffect, useState, ChangeEvent } from "react";
 export * from "./types";
 

@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { createReducers, initialStore } from "./model";
 import { ViewState, Predicate, ErrorMessage, ValidationModule } from "./types";
 import { Observable } from "rxjs";
-import { Store as InputStore } from "../input";
+import { Store as InputStore } from "../input/component";
 import { tap, withLatestFrom, skip } from "rxjs/operators";
 export * from "./types";
 

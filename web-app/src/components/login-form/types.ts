@@ -1,4 +1,4 @@
-import { InputComponent } from "../input";
+import { InputComponent } from "../input/component";
 import { SubmitButtonComponent } from "../submit-button";
 
 export type Components = {

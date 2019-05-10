@@ -8,8 +8,6 @@ export type ReducerArgs<
 
 export type Reducer<Store, Action> = (s: Store, a: Action) => Store;
 
-export type Reducers<Obj> = { [k in keyof Obj]: Reducer<any, any> };
-
 export type Endpoint<Store, Action> = {
   trigger: (a: Action) => void;
   updater: Observable<(s: Store) => Store>;
