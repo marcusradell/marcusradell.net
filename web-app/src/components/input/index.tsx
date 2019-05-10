@@ -4,17 +4,20 @@ import {
   ErrorMessage,
   ValidationModule
 } from "../validation";
-import { createMachine } from "../../rx-machine";
-import { Store } from "./types";
-import { initialState, reducers } from "./model";
+import { createRxm, Endpoint, Rxm } from "../../rx-machine";
+import { Store, Chart } from "./types";
+import { initialStore, chart } from "./model";
 import React, { useEffect, useState, ChangeEvent } from "react";
+import { Observable } from "rxjs";
 export * from "./types";
 
 export class InputComponent {
-  public rxm = createMachine(reducers, initialState);
+  public rxm: Rxm<Chart, Store>;
   public validationModule: ValidationModule;
 
   constructor(predicate: Predicate<Store>, errorMessage: ErrorMessage<Store>) {
+    this.rxm = createRxm<Chart, Store>(chart, initialStore);
+
     this.validationModule = createValidationModule(
       predicate,
       errorMessage,
@@ -22,19 +25,15 @@ export class InputComponent {
     );
   }
 
-  public onChange(state: Store["state"]) {
-    return (e: ChangeEvent<HTMLInputElement>) => {
-      const { value } = e.target;
-
-      this.rxm.machine[state].edit.trigger(value);
-    };
+  private onChange(e: ChangeEvent<HTMLInputElement>) {
+    this.rxm.machine.editing.edit.trigger(e.target.value);
   }
 
   public createView(type: "text" | "password") {
     const Validation = this.validationModule.createView();
 
     return () => {
-      const [store, setState] = useState(initialState);
+      const [store, setState] = useState(initialStore);
 
       useEffect(() => {
         const subscription = this.rxm.store.subscribe(x => {
@@ -50,7 +49,7 @@ export class InputComponent {
             className="form-control form-control-lg"
             type={type}
             value={store.ctx}
-            onChange={this.onChange(store.state)}
+            onChange={this.onChange}
           />
           <div>
             <Validation />

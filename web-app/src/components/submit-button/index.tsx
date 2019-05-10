@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Observable, combineLatest } from "rxjs";
 import { useState, useEffect } from "react";
-import { createMachine, Machine } from "../../old_machine";
+import { createRxm } from "../../rx-machine";
 import { State, Reducers, MachineStates } from "./types";
 import { initialState, reducers } from "./model";
 import { ValidationModule } from "../validation";
@@ -14,7 +14,7 @@ export class SubmitButtonComponent {
   private validStream: Observable<boolean>;
 
   constructor(validationModules: ValidationModule[]) {
-    const [machine, stateStream] = createMachine<State, Reducers>(
+    const [machine, stateStream] = createRxm<State, Reducers>(
       reducers,
       initialState
     );

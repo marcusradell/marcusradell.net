@@ -1,4 +1,4 @@
-import { createMachine } from "../../rx-machine";
+import { createRxm } from "../../rx-machine";
 import React, { useEffect, useState } from "react";
 import { createReducers, initialStore } from "./model";
 import { ViewState, Predicate, ErrorMessage, ValidationModule } from "./types";
@@ -12,7 +12,7 @@ export function createValidationModule(
   errorMessage: ErrorMessage<InputStore>,
   inputStateStream: Observable<InputStore>
 ): ValidationModule {
-  const rxm = createMachine(
+  const rxm = createRxm(
     createReducers<InputStore>(predicate, errorMessage),
     initialStore
   );
