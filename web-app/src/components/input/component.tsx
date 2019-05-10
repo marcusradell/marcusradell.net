@@ -11,21 +11,25 @@ import React, { useEffect, useState, ChangeEvent } from "react";
 export * from "./types";
 
 export class InputComponent {
-  public rxm: Rxm<Chart, Store>;
+  public store: Rxm<Store, Chart>[0];
+  public machine: Rxm<Store, Chart>[1];
   public validationModule: ValidationModule;
 
   constructor(predicate: Predicate<Store>, errorMessage: ErrorMessage<Store>) {
-    this.rxm = createRxm<Chart, Store>(chart, initialStore);
+    const [store, machine] = createRxm<Chart, Store>(chart, initialStore);
+
+    this.store = store;
+    this.machine = machine;
 
     this.validationModule = createValidationModule(
       predicate,
       errorMessage,
-      this.rxm.store
+      store
     );
   }
 
   private onChange(e: ChangeEvent<HTMLInputElement>) {
-    this.rxm.machine.editing.edit.trigger(e.target.value);
+    this.machine.editing.edit.trigger(e.target.value);
   }
 
   public createView(type: "text" | "password") {
@@ -35,7 +39,7 @@ export class InputComponent {
       const [store, setState] = useState(initialStore);
 
       useEffect(() => {
-        const subscription = this.rxm.store.subscribe(x => {
+        const subscription = this.store.subscribe(x => {
           setState(x);
         });
 

@@ -10,17 +10,17 @@ import {
 import { Reducer, Endpoint, ReducerArgs, Rxm } from "./types";
 export * from "./types";
 
-function createEndpoint<Store, Action>(
-  reducer: Reducer<Store, Action>
-): Endpoint<Store, Action> {
-  const subject = new Subject<Action>();
+function createEndpoint<Store, Context>(
+  reducer: Reducer<Store, Context>
+): Endpoint<Store, Context> {
+  const subject = new Subject<Context>();
 
-  function trigger(x: Action) {
+  function trigger(x: Context) {
     subject.next(x);
   }
 
   const updater: Observable<(s: Store) => Store> = subject.pipe(
-    map((a: Action) => (s: Store) => reducer(s, a))
+    map((a: Context) => (s: Store) => reducer(s, a))
   );
 
   return { trigger, updater } as const;
@@ -100,7 +100,7 @@ export function createRxm<
     [k: string]: { [k: string]: Reducer<Store, any> };
   },
   Store extends { state: keyof Chart }
->(chart: Chart, initialStore: Store): Rxm<Chart, Store> {
+>(chart: Chart, initialStore: Store): Rxm<Store, Chart> {
   const keys = Object.keys(chart) as Array<keyof Chart>;
   const machine = keys.reduce(
     (acc, key) => {
@@ -120,5 +120,5 @@ export function createRxm<
 
   const store = createStore(machine, initialStore);
 
-  return { machine, store };
+  return [store, machine];
 }

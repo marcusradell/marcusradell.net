@@ -1,29 +1,29 @@
 import { Observable } from "rxjs";
 
 export type ReducerArgs<
-  Reducer extends (store: any, action: any) => any
-> = Reducer extends (store: infer Store, action: infer Action) => typeof store
-  ? [Store, Action]
+  Reducer extends (store: any, context: any) => any
+> = Reducer extends (store: infer Store, context: infer Context) => typeof store
+  ? [Store, Context]
   : never;
 
-export type Reducer<Store, Action> = (s: Store, a: Action) => Store;
+export type Reducer<Store, Context> = (s: Store, a: Context) => Store;
 
-export type Endpoint<Store, Action> = {
-  trigger: (a: Action) => void;
+export type Endpoint<Store, Context> = {
+  trigger: (ctx: Context) => void;
   updater: Observable<(s: Store) => Store>;
 };
 
 export type Rxm<
-  Chart extends { [k: string]: { [k: string]: Reducer<Store, any> } },
-  Store
-> = {
-  machine: {
+  Store,
+  Chart extends { [k: string]: { [k: string]: Reducer<Store, any> } }
+> = [
+  Observable<Store>,
+  {
     [k in keyof Chart]: {
       [kk in keyof Chart[k]]: Endpoint<
         ReducerArgs<Chart[k][kk]>[0],
         ReducerArgs<Chart[k][kk]>[1]
       >
     }
-  };
-  store: Observable<Store>;
-};
+  }
+];
