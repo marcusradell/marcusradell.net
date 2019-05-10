@@ -4,11 +4,10 @@ import {
   ErrorMessage,
   ValidationModule
 } from "../validation";
-import { createRxm, Endpoint, Rxm } from "../../rx-machine";
+import { createRxm, Rxm } from "../../rx-machine";
 import { Store, Chart } from "./types";
 import { initialStore, chart } from "./model";
 import React, { useEffect, useState, ChangeEvent } from "react";
-import { Observable } from "rxjs";
 export * from "./types";
 
 export class InputComponent {
