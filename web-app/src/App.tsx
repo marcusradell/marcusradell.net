@@ -1,6 +1,6 @@
 import React from "react";
 // import { LoginFormComponent } from "./components/login-form";
-import { InputComponent, Store } from "./components/input";
+import { InputComponent, Store } from "./modules/input";
 import { IWs } from "./services/ws";
 
 export class AppComponent {
@@ -11,13 +11,14 @@ export class AppComponent {
     // this.loginFormComponent = new LoginFormComponent(ws);
     this.inputComponent = new InputComponent(
       (s: Store) => !!s.ctx,
-      (s: Store) => "Invalid"
+      (s: Store) => "Invalid",
+      "text"
     );
   }
 
   public createView() {
     // const LoginForm = this.loginFormComponent.createView();
-    const Input = this.inputComponent.createView("text");
+    const Input = this.inputComponent.createView();
 
     return () => (
       <div

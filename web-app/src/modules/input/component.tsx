@@ -15,7 +15,11 @@ export class InputComponent {
   public machine: Rxm<Store, Chart>[1];
   public validationModule: ValidationModule;
 
-  constructor(predicate: Predicate<Store>, errorMessage: ErrorMessage<Store>) {
+  constructor(
+    predicate: Predicate<Store>,
+    errorMessage: ErrorMessage<Store>,
+    private type: "text" | "password"
+  ) {
     const [store, machine] = createRxm<Chart, Store>(chart, initialStore);
 
     this.store = store;
@@ -34,7 +38,7 @@ export class InputComponent {
     this.machine.editing.edit.trigger(e.target.value);
   }
 
-  public createView(type: "text" | "password") {
+  public createView() {
     const Validation = this.validationModule.createView();
 
     return () => {
@@ -52,7 +56,7 @@ export class InputComponent {
         <>
           <input
             className="form-control form-control-lg"
-            type={type}
+            type={this.type}
             value={store.ctx}
             onChange={this.onChange}
           />
