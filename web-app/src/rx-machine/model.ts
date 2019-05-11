@@ -96,10 +96,10 @@ function createStore<
 }
 
 export function createRxm<
+  Store extends { state: keyof Chart },
   Chart extends {
     [k: string]: { [k: string]: Reducer<Store, any> };
-  },
-  Store extends { state: keyof Chart }
+  }
 >(chart: Chart, initialStore: Store): Rxm<Store, Chart> {
   const keys = Object.keys(chart) as Array<keyof Chart>;
   const machine = keys.reduce(
@@ -120,5 +120,5 @@ export function createRxm<
 
   const store = createStore(machine, initialStore);
 
-  return [store, machine];
+  return { store, machine };
 }

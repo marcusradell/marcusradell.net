@@ -1,22 +1,23 @@
-import { MachineStates, State, Reducers } from "./types";
+import { Store, Chart } from "./types";
 
-export const initialState: State = {
-  machine: MachineStates.Disabled
+export const initialState: Store = {
+  state: "disabled"
 };
 
-const validate = (valid: boolean) => (s: State) => ({
-  machine: valid ? MachineStates.Enabled : MachineStates.Disabled
-});
+const setEnabled = (s: Store, enabled: boolean) =>
+  ({
+    state: enabled ? "enabled" : "disabled"
+  } as const);
 
-export const reducers: Reducers = {
-  [MachineStates.Disabled]: {
-    validate
+export const chart: Chart = {
+  disabled: {
+    setEnabled
   },
-  [MachineStates.Enabled]: {
-    submit: () => (s: State) => ({ machine: MachineStates.Submitting }),
-    validate
+  enabled: {
+    submit: (s: Store, _: null) => ({ state: "submitting" }),
+    setEnabled
   },
-  [MachineStates.Submitting]: {
-    done: () => (s: State) => ({ machine: MachineStates.Disabled })
+  submitting: {
+    done: (s: Store) => ({ state: "disabled" })
   }
 };

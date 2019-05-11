@@ -16,14 +16,14 @@ export type Endpoint<Store, Context> = {
 export type Rxm<
   Store,
   Chart extends { [k: string]: { [k: string]: Reducer<Store, any> } }
-> = [
-  Observable<Store>,
-  {
+> = {
+  store: Observable<Store>;
+  machine: {
     [k in keyof Chart]: {
       [kk in keyof Chart[k]]: Endpoint<
         ReducerArgs<Chart[k][kk]>[0],
         ReducerArgs<Chart[k][kk]>[1]
       >
     }
-  }
-];
+  };
+};

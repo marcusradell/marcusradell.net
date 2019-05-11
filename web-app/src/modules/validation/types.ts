@@ -1,3 +1,5 @@
+import { Rxm } from "../../rx-machine";
+
 export type Store =
   | { state: "initial"; ctx: null }
   | { state: "valid"; ctx: null }
@@ -27,6 +29,7 @@ export type ViewStore<InputStore> = {
   input: InputStore | null;
 };
 
-export type ValidationModule = {
+export type ValidationModule<InputStore> = {
+  rxm: Rxm<Store, Chart<InputStore>>;
   createView(): () => JSX.Element;
 };

@@ -1,25 +1,18 @@
-export enum MachineStates {
-  Disabled = "disabled",
-  Enabled = "enabled",
-  Submitting = "submitting"
-}
-
-export type State = {
-  machine: MachineStates;
+export type Store = {
+  state: "disabled" | "enabled" | "submitting";
 };
 
-type Validate = (valid: boolean) => (s: State) => State;
+type SetEnabled = (s: Store, enabled: boolean) => Store;
 
-export type Reducers = {
-  [MachineStates.Disabled]: {
-    validate: Validate;
+export type Chart = {
+  disabled: {
+    setEnabled: SetEnabled;
   };
-  [MachineStates.Enabled]: {
-    submit: () => (s: State) => State;
-    validate: Validate;
+  enabled: {
+    submit: (s: Store, _: null) => Store;
+    setEnabled: SetEnabled;
   };
-
-  [MachineStates.Submitting]: {
-    done: () => (s: State) => State;
+  submitting: {
+    done: (s: Store, _: null) => Store;
   };
 };
