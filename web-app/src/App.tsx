@@ -1,24 +1,16 @@
 import React from "react";
 import { LoginFormComponent } from "./modules/login-form";
-// import { InputComponent, Store } from "./modules/input";
 import { IWs } from "./services/ws";
 
 export class AppComponent {
   public loginFormComponent: LoginFormComponent;
-  // public inputComponent: InputComponent;
 
   constructor(ws: IWs) {
     this.loginFormComponent = new LoginFormComponent(ws);
-    // this.inputComponent = new InputComponent(
-    // (s: Store) => !!s.ctx,
-    // (s: Store) => "Invalid",
-    // "text"
-    // );
   }
 
   public createView() {
     const LoginForm = this.loginFormComponent.createView();
-    // const Input = this.inputComponent.createView();
 
     return () => (
       <div
@@ -43,7 +35,6 @@ export class AppComponent {
             </div>
             <div className="card-body">
               <LoginForm />
-              {/* <Input /> */}
             </div>
           </div>
         </div>
