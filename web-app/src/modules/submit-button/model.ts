@@ -14,10 +14,10 @@ export const chart: Chart = {
     setEnabled
   },
   enabled: {
-    submit: (s: Store, _: null) => ({ state: "submitting" }),
+    submit: (s: Store) => ({ state: "submitting" }),
     setEnabled
   },
   submitting: {
-    done: (s: Store) => ({ state: "disabled" })
+    done: (s: Store) => ({ state: "enabled" })
   }
 };

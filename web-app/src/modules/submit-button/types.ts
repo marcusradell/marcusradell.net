@@ -9,10 +9,10 @@ export type Chart = {
     setEnabled: SetEnabled;
   };
   enabled: {
-    submit: (s: Store, _: null) => Store;
+    submit: (s: Store) => Store;
     setEnabled: SetEnabled;
   };
   submitting: {
-    done: (s: Store, _: null) => Store;
+    done: (s: Store) => Store;
   };
 };

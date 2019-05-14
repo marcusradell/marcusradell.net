@@ -12,15 +12,6 @@ export class SubmitButtonComponent {
   constructor(enabledStream: Observable<boolean>) {
     this.rxm = createRxm<Store, Chart>(chart, initialState);
     this.enabledStream = enabledStream;
-    // @TODO: Move to parent module
-    // this.validStream = combineLatest(
-    //   // TODO: Fix typing
-    //   validationModules.map(validationModule => validationModule.rxm.store)
-    // ).pipe(
-    //   map(states =>
-    //     states.every(s => s.machine === ValidationMachineStates.Valid)
-    //   )
-    // );
   }
 
   public createView() {
@@ -71,6 +62,6 @@ export class SubmitButtonComponent {
       throw new Error(`Cannot submit from state <${state}>.`);
     }
 
-    this.rxm.machine[state].submit.trigger(null);
+    this.rxm.machine[state].submit.trigger();
   }
 }

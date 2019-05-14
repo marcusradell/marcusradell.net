@@ -56,7 +56,7 @@ export class LoginFormComponent {
 
     return () => {
       useEffect(() => {
-        const subscription = this.components.submitButton.rxm.machine.enabled.submit.updater
+        const subscription = this.components.submitButton.rxm.store
           .pipe(
             withLatestFrom(
               this.components.nickname.rxm.store,
@@ -71,12 +71,12 @@ export class LoginFormComponent {
             )
           )
           .subscribe(store => {
+            if (store.submitStore.state !== "submitting") return;
+
             this.ws.publish("auth#login", store.formCtx);
 
             // @TODO: Reason about the possible race condition where we have not yet updated our state to be "submitting" yet.
-            this.components.submitButton.rxm.machine.submitting.done.trigger(
-              null
-            );
+            this.components.submitButton.rxm.machine.submitting.done.trigger();
           });
         return () => {
           subscription.unsubscribe();

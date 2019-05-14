@@ -2,7 +2,9 @@ import { Observable } from "rxjs";
 
 export type ReducerArgs<
   Reducer extends (store: any, context: any) => any
-> = Reducer extends (store: infer Store, context: infer Context) => typeof store
+> = Reducer extends (store: infer Store) => typeof store
+  ? [Store, void]
+  : Reducer extends (store: infer Store, context: infer Context) => typeof store
   ? [Store, Context]
   : never;
 
