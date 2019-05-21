@@ -1,4 +1,4 @@
-import { createMachine } from "./index";
+import { createRxm } from "./index";
 import { skip, take } from "rxjs/operators";
 
 test("createMachine", async () => {
@@ -32,7 +32,7 @@ test("createMachine", async () => {
     ctx: 123
   } as Store;
 
-  const { machine, store } = createMachine(chart, initialStore);
+  const { machine, store } = createRxm(chart, initialStore);
 
   const result = store
     .pipe(

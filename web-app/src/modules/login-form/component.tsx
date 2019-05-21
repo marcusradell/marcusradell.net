@@ -1,9 +1,9 @@
 import React, { useEffect } from "react";
 import { Components } from "./types";
-import { InputComponent } from "../input";
+import { InputComponent } from "../input/component";
 import { SubmitButtonComponent } from "../submit-button";
-import { MachineStates } from "../submit-button/types";
-import { withLatestFrom } from "rxjs/operators";
+import { combineLatest } from "rxjs";
+import { withLatestFrom, map } from "rxjs/operators";
 import { IWs } from "../../services/ws";
 
 const minNicknameLength = 6;
@@ -19,7 +19,8 @@ export class LoginFormComponent {
       s =>
         `Nickname is ${
           s.ctx.length
-        } characters and needs to be at least ${minNicknameLength}.`
+        } characters and needs to be at least ${minNicknameLength}.`,
+      "text"
     );
 
     const password = new InputComponent(
@@ -27,13 +28,16 @@ export class LoginFormComponent {
       s =>
         `Password is currently ${
           s.ctx.length
-        } characters and needs to be at least ${minPasswordLength}.`
+        } characters and needs to be at least ${minPasswordLength}.`,
+      "password"
     );
 
-    const submitButton = new SubmitButtonComponent([
-      nickname.validationComponent,
-      password.validationComponent
-    ]);
+    const validStream = combineLatest(
+      nickname.validationModule.rxm.store,
+      password.validationModule.rxm.store
+    ).pipe(map(stores => stores.every(s => s.state === "valid")));
+
+    const submitButton = new SubmitButtonComponent(validStream);
 
     this.components = {
       nickname,
@@ -46,34 +50,33 @@ export class LoginFormComponent {
   }
 
   public createView() {
-    const Nickname = this.components.nickname.createView("text");
-    const Password = this.components.password.createView("password");
+    const Nickname = this.components.nickname.createView();
+    const Password = this.components.password.createView();
     const SubmitButton = this.components.submitButton.createView();
 
     return () => {
       useEffect(() => {
-        const subscription = this.components.submitButton.stateStream
+        const subscription = this.components.submitButton.rxm.store
           .pipe(
             withLatestFrom(
               this.components.nickname.rxm.store,
               this.components.password.rxm.store,
-              (submitState, nicknameState, passwordState) => ({
-                submitState,
-                formState: {
-                  nickname: nicknameState.ctx,
-                  password: passwordState.ctx
+              (submitStore, nicknameStore, passwordStore) => ({
+                submitStore: submitStore,
+                formCtx: {
+                  nickname: nicknameStore.ctx,
+                  password: passwordStore.ctx
                 }
               })
             )
           )
-          .subscribe(state => {
-            if (state.submitState.machine === MachineStates.Submitting) {
-              this.ws.publish("auth#login", state.formState);
+          .subscribe(store => {
+            if (store.submitStore.state !== "submitting") return;
 
-              this.components.submitButton.machine[
-                MachineStates.Submitting
-              ].actions.done.trigger();
-            }
+            this.ws.publish("auth#login", store.formCtx);
+
+            // @TODO: Reason about the possible race condition where we have not yet updated our state to be "submitting" yet.
+            this.components.submitButton.rxm.machine.submitting.done.trigger();
           });
         return () => {
           subscription.unsubscribe();

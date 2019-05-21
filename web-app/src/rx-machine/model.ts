@@ -7,18 +7,20 @@ import {
   tap,
   shareReplay
 } from "rxjs/operators";
-import { Reducer, Endpoint, ReducerArgs } from "./types";
+import { Reducer, Endpoint, ReducerArgs, Rxm } from "./types";
 export * from "./types";
 
-function createEndpoint<Store, Action>(reducer: Reducer<Store, Action>) {
-  const subject = new Subject<Action>();
+function createEndpoint<Store, Context>(
+  reducer: Reducer<Store, Context>
+): Endpoint<Store, Context> {
+  const subject = new Subject<Context>();
 
-  function trigger(x: Action) {
+  function trigger(x: Context) {
     subject.next(x);
   }
 
   const updater: Observable<(s: Store) => Store> = subject.pipe(
-    map((a: Action) => (s: Store) => reducer(s, a))
+    map((a: Context) => (s: Store) => reducer(s, a))
   );
 
   return { trigger, updater } as const;
@@ -26,7 +28,12 @@ function createEndpoint<Store, Action>(reducer: Reducer<Store, Action>) {
 
 function createEndpoints<Reducers extends { [k: string]: Reducer<any, any> }>(
   reducers: Reducers
-) {
+): {
+  [k in keyof Reducers]: Endpoint<
+    ReducerArgs<Reducers[k]>[0],
+    ReducerArgs<Reducers[k]>[1]
+  >
+} {
   const keys = Object.keys(reducers) as (keyof Reducers)[];
 
   const endpoints = keys.reduce(
@@ -36,12 +43,10 @@ function createEndpoints<Reducers extends { [k: string]: Reducer<any, any> }>(
       return acc;
     },
     {} as {
-      [k in keyof Reducers]: {
-        trigger: (a: ReducerArgs<Reducers[k]>[1]) => void;
-        updater: Observable<
-          (s: ReducerArgs<Reducers[k]>[0]) => ReducerArgs<Reducers[k]>[0]
-        >;
-      }
+      [k in keyof Reducers]: Endpoint<
+        ReducerArgs<Reducers[k]>[0],
+        ReducerArgs<Reducers[k]>[1]
+      >
     }
   );
 
@@ -90,16 +95,16 @@ function createStore<
   return store;
 }
 
-export function createMachine<
+export function createRxm<
+  Store extends { state: keyof Chart },
   Chart extends {
     [k: string]: { [k: string]: Reducer<Store, any> };
-  },
-  Store extends { state: keyof Chart }
->(chart: Chart, initialStore: Store) {
+  }
+>(chart: Chart, initialStore: Store): Rxm<Store, Chart> {
   const keys = Object.keys(chart) as Array<keyof Chart>;
   const machine = keys.reduce(
     (acc, key) => {
-      const endpoints = createEndpoints(chart[key]);
+      const endpoints = createEndpoints<Chart[keyof Chart]>(chart[key]);
       acc[key] = endpoints;
       return acc;
     },
@@ -115,5 +120,5 @@ export function createMachine<
 
   const store = createStore(machine, initialStore);
 
-  return { machine, store };
+  return { store, machine };
 }
