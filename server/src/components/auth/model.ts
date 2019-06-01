@@ -7,38 +7,33 @@ import { Message } from "../../services/wss/types";
 import * as bcrypt from "bcrypt";
 import { IDatabase } from "pg-promise";
 
-export class AuthModel {
-  private log: Subject<LoggerMessage> = new Subject<LoggerMessage>();
+export async function createAuthModel(db: IDatabase<any>, saltRounds: number) {
+  const log: Subject<LoggerMessage> = new Subject<LoggerMessage>();
 
-  constructor(private db: IDatabase<any>, private saltRounds: number) {}
-
-  public processAction(m: Message) {
-    switch (m.type) {
-      case AuthCommandTypes.Login:
-        return this.login(m);
-      default:
-        throw new Error("Message type not supported.");
-    }
-  }
-
-  public getLog() {
-    return this.log.asObservable();
-  }
-
-  public async init() {
-    await this.db.none(`
+  await db.none(`
     create schema if not exists auth
   `);
-    await this.db.none(`
+  await db.none(`
     create table if not exists auth.events (
       uuid uuid primary key,
       data jsonb not null,
       created_at timestamptz default now()
     )`);
-    return;
+
+  function process(m: Message) {
+    switch (m.type) {
+      case AuthCommandTypes.Login:
+        return login(m);
+      default:
+        throw new Error("Message type not supported.");
+    }
   }
 
-  private async login(props: { cid: string; type: string }) {
+  function getLog() {
+    return log.asObservable();
+  }
+
+  async function login(props: { cid: string; type: string }) {
     const validation = AuthLoginCommand.decode(props);
 
     if (validation.isLeft()) {
@@ -48,14 +43,11 @@ export class AuthModel {
         type: `${props.type}>failed`,
         data: report
       };
-      this.log.next(result);
-      return Promise.reject(result);
+      log.next(result);
+      return result;
     }
 
-    const hash = await bcrypt.hash(
-      validation.value.data.password,
-      this.saltRounds
-    );
+    const hash = await bcrypt.hash(validation.value.data.password, saltRounds);
     const event = {
       ...validation.value,
       data: {
@@ -64,15 +56,20 @@ export class AuthModel {
       }
     };
 
-    await this.db.none(`insert into auth.events values ($<uuid>, $<data>)`, {
+    await db.none(`insert into auth.events values ($<uuid>, $<data>)`, {
       uuid: uuid(),
       data: event
     });
 
-    this.log.next({
+    log.next({
       type: "server#handle_message>succeeded",
       cid: event.cid,
       data: "User created successfully."
     });
   }
+
+  return {
+    process,
+    getLog
+  };
 }

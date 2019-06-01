@@ -6,7 +6,7 @@ export type LoggerMessage = {
   data?: any;
 };
 
-export interface ILoggerModel {
+export interface ILogger {
   getLog(): Observable<LoggerMessage>;
   attach(l: Observable<LoggerMessage>): void;
   log(m: LoggerMessage): void;

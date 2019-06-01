@@ -10,7 +10,7 @@
     "postinstall": "npm run build",
     "start": "node lib/cmd/server.js",
     "build": "tsc",
-    "dev": "ts-node-dev src/cmd/server.ts",
+    "dev": "ts-node-dev --ignore-watch node_modules --respawn --transpileOnly src/cmd/server.ts",
     "deploy": "cd ..; git subtree push --prefix server heroku master"
   },
   "keywords": [],
@@ -28,6 +28,7 @@
     "dotenv": "^6.2.0",
     "express": "^4.16.4",
     "io-ts": "^1.8.3",
+    "io-ts-types": "^0.4.7",
     "jest": "^24.1.0",
     "pg-promise": "^8.5.5",
     "rxjs": "^6.4.0",

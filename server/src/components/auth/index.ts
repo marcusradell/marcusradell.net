@@ -1,4 +1,4 @@
-import { AuthModel } from "./model";
+import { createAuthModel } from "./model";
 import { LoggerMessage } from "../../services/logger/types";
 import { Observable } from "rxjs";
 import { IDatabase } from "pg-promise";
@@ -9,9 +9,7 @@ export async function Auth(props: {
   db: IDatabase<any>;
   authSaltRounds: number;
 }) {
-  const model = new AuthModel(props.db, props.authSaltRounds);
+  const model = await createAuthModel(props.db, props.authSaltRounds);
   props.attach(model.getLog());
-  await model.init();
-
   return model;
 }

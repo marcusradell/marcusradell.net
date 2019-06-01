@@ -1,62 +1,59 @@
 import { PathReporter } from "io-ts/lib/PathReporter";
 import { Subject } from "rxjs";
 import Ws from "ws";
-import { IWssModel, Message, WssLogTypes, WssLogMessage } from "./types";
+import { IWss, Message, WssLogTypes, WssLogMessage } from "./types";
 import uuid from "uuid/v4";
 
-export class WssModel implements IWssModel {
-  private wss: Ws.Server;
-  private messageSubject: Subject<Message>;
-  private logSubject: Subject<WssLogMessage>;
+export function createWss(port: number): IWss {
+  const wss: Ws.Server = new Ws.Server({ port });
+  const messageSubject: Subject<Message> = new Subject<Message>();
+  const logSubject: Subject<WssLogMessage> = new Subject<WssLogMessage>();
 
-  constructor(port: number) {
-    this.messageSubject = new Subject<Message>();
-    this.logSubject = new Subject<WssLogMessage>();
-    this.wss = new Ws.Server({ port });
-  }
+  wss.on("connection", (wsc: Ws) => {
+    wsc.on("message", (messageString: string) => {
+      try {
+        const message: unknown = {
+          ...JSON.parse(messageString),
+          cid: uuid()
+        };
+        const validationResult = Message.decode(message);
 
-  public init() {
-    this.wss.on("connection", (wsc: Ws) => {
-      wsc.on("message", (messageString: string) => {
-        try {
-          const message: unknown = {
-            ...JSON.parse(messageString),
-            cid: uuid()
-          };
-          const validationResult = Message.decode(message);
-
-          if (validationResult.isLeft()) {
-            this.logSubject.next({
-              type: WssLogTypes.ValidateFailed,
-              cid: uuid(),
-              data: PathReporter.report(validationResult)
-            });
-            return;
-          }
-
-          this.logSubject.next({
-            type: WssLogTypes.ValidateSucceeded,
-            cid: validationResult.value.cid
+        if (validationResult.isLeft()) {
+          logSubject.next({
+            type: WssLogTypes.ValidateFailed,
+            cid: uuid(),
+            data: PathReporter.report(validationResult)
           });
-
-          this.messageSubject.next(validationResult.value);
-        } catch (e) {
-          this.logSubject.next({
-            type: WssLogTypes.ParseFailed,
-            cid: uuid()
-          });
+          return;
         }
-      });
+
+        logSubject.next({
+          type: WssLogTypes.ValidateSucceeded,
+          cid: validationResult.value.cid
+        });
+
+        messageSubject.next(validationResult.value);
+      } catch (e) {
+        logSubject.next({
+          type: WssLogTypes.ParseFailed,
+          cid: uuid()
+        });
+      }
     });
+  });
+
+  function getMessages() {
+    return messageSubject.asObservable();
   }
 
-  public getMessages() {
-    return this.messageSubject.asObservable();
+  function getLog() {
+    return logSubject.asObservable();
   }
 
-  public getLog() {
-    return this.logSubject.asObservable();
-  }
+  return {
+    getLog,
+    getMessages
+  };
 }
 
 // NOTE: this is a snippet if we need to broadcast to other clients.
