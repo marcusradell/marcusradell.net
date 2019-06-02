@@ -33,7 +33,7 @@ export function createLogger(): ILogger {
 
   function attach(messages: Observable<LoggerMessage>) {
     messages
-      .forEach(m => log(m))
+      .forEach(m => logSubject.next(m))
       .then(() => {
         log({ cid: uuid(), type: "logger#attach>completed" });
         process.exit(1);
