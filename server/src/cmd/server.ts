@@ -12,7 +12,7 @@ async function run() {
 
   setupExceptionHandlers(logger);
 
-  const { DB_CONNECTION, AUTH_SALT_ROUNDS, WSS_PORT } = setupConfig(logger);
+  const { DB_CONNECTION, AUTH_SALT_ROUNDS, PORT } = setupConfig(logger);
 
   const db = await Db({
     attach: logger.attach,
@@ -27,7 +27,7 @@ async function run() {
 
   const wss = Wss({
     attach: logger.attach,
-    wssPort: WSS_PORT
+    wssPort: PORT
   });
 
   wss
