@@ -4,7 +4,9 @@ import {
   AuthLoginEvent,
   AuthLoginSucceeded,
   AuthLoginFailed,
-  AuthSignupSucceeded
+  AuthSignupSucceeded,
+  AuthLoginInvalid,
+  AuthLoginThrowed
 } from "./types";
 import { Subject, Observable } from "rxjs";
 import uuid from "uuid/v4";
@@ -39,7 +41,9 @@ export async function createAuthModel(
     return events.asObservable();
   }
 
+  const loginInvalidType = "auth#login>invalid" as const;
   const loginFailedType = "auth#login>failed" as const;
+  const loginThrowedType = "auth#login>throwed" as const;
   const loginSucceededType = "auth#login>succeeded" as const;
   const signupSucceededType = "auth#signup>succeeded" as const;
 
@@ -54,7 +58,7 @@ export async function createAuthModel(
 
       return {
         cid,
-        type: loginFailedType,
+        type: loginInvalidType,
         data: report
       };
     }
@@ -86,7 +90,7 @@ export async function createAuthModel(
 
     if (typeof storedPasswordHash !== "string") {
       return {
-        type: loginFailedType,
+        type: loginThrowedType,
         cid,
         data: [
           "Exception while trying to login. Stored password was not a string."
@@ -103,7 +107,7 @@ export async function createAuthModel(
       return {
         type: loginFailedType,
         cid,
-        data: [`Could not login <${validation.value.data.nickname}>.`]
+        data: { nickname: validation.value.data.nickname }
       };
     }
 
@@ -116,12 +120,24 @@ export async function createAuthModel(
     };
   }
 
+  async function applyLoginInvalid(event: AuthLoginInvalid) {
+    events.next(event);
+  }
+
   async function applyLoginFailed(event: AuthLoginFailed) {
     await db.none(`insert into auth.events values ($<uuid>, $<data>)`, {
       uuid: uuid(),
       data: event
     });
 
+    events.next(event);
+  }
+
+  async function applyLoginThrowed(event: AuthLoginThrowed) {
+    await db.none(`insert into auth.events values ($<uuid>, $<data>)`, {
+      uuid: uuid(),
+      data: event
+    });
     events.next(event);
   }
 

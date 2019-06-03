@@ -1,9 +1,21 @@
 import * as t from "io-ts";
 
+export type AuthLoginInvalid = {
+  type: "auth#login>invalid";
+  cid: string;
+  data: string[];
+};
+
+export type AuthLoginThrowed = {
+  type: "auth#login>throwed";
+  cid: string;
+  data: string[];
+};
+
 export type AuthLoginFailed = {
   type: "auth#login>failed";
   cid: string;
-  data?: unknown;
+  data: { nickname: string };
 };
 
 export type AuthLoginSucceeded = {
@@ -19,7 +31,9 @@ export type AuthSignupSucceeded = {
 };
 
 export type AuthLoginEvent =
+  | AuthLoginInvalid
   | AuthLoginFailed
+  | AuthLoginThrowed
   | AuthLoginSucceeded
   | AuthSignupSucceeded;
 
