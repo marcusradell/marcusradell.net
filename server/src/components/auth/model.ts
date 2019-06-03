@@ -1,4 +1,3 @@
-import { PathReporter } from "io-ts/lib/PathReporter";
 import {
   AuthLoginCommand,
   AuthLoginEvent,
@@ -55,8 +54,7 @@ export async function createAuthModel(
     const validation = AuthLoginCommand.decode(command);
 
     if (validation.isLeft()) {
-      const report = PathReporter.report(validation);
-      return authLoginInvalid(cid, report);
+      return authLoginInvalid(cid, validation);
     }
 
     const { nickname, password } = validation.value.data;

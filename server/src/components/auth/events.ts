@@ -3,17 +3,21 @@ import {
   AuthLoginFailed,
   AuthLoginThrowed,
   AuthLoginSucceeded,
-  AuthSignupSucceeded
+  AuthSignupSucceeded,
+  AuthLoginCommand
 } from "./types";
+import { PathReporter } from "io-ts/lib/PathReporter";
+import { Either } from "fp-ts/lib/Either";
+import { Errors } from "io-ts";
 
 export function authLoginInvalid(
   cid: string,
-  report: string[]
+  validation: Either<Errors, AuthLoginCommand>
 ): AuthLoginInvalid {
   return {
     cid,
     type: "auth#login>invalid",
-    data: report
+    data: PathReporter.report(validation)
   };
 }
 
