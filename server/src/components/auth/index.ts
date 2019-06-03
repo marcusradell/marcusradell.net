@@ -5,7 +5,7 @@ import { IDatabase } from "pg-promise";
 import { migrate } from "./migrate";
 export * from "./types";
 
-export async function createAuthComponent(args: {
+export async function Auth(args: {
   attach: (l: Observable<LoggerMessage>) => void;
   db: IDatabase<unknown>;
   authSaltRounds: number;
