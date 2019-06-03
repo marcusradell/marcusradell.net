@@ -1,78 +1,158 @@
 import { PathReporter } from "io-ts/lib/PathReporter";
-import { AuthLoginCommand, AuthCommandTypes } from "./types";
-import { LoggerMessage } from "../../services/logger/types";
-import { Subject } from "rxjs";
+import {
+  AuthLoginCommand,
+  AuthLoginEvent,
+  AuthLoginSucceeded,
+  AuthLoginFailed,
+  AuthSignupSucceeded
+} from "./types";
+import { Subject, Observable } from "rxjs";
 import uuid from "uuid/v4";
-import { Message } from "../../services/wss/types";
 import * as bcrypt from "bcrypt";
 import { IDatabase } from "pg-promise";
 
-export class AuthModel {
-  private log: Subject<LoggerMessage> = new Subject<LoggerMessage>();
+export async function createAuthModel(
+  db: IDatabase<unknown>,
+  saltRounds: number
+) {
+  const events: Subject<AuthLoginEvent> = new Subject<AuthLoginEvent>();
 
-  constructor(private db: IDatabase<any>, private saltRounds: number) {}
-
-  public processAction(m: Message) {
-    switch (m.type) {
-      case AuthCommandTypes.Login:
-        return this.login(m);
-      default:
-        throw new Error("Message type not supported.");
+  async function process(command: AuthLoginCommand) {
+    switch (command.type) {
+      case "auth#login":
+        return await processLogin(command.cid, command);
     }
   }
 
-  public getLog() {
-    return this.log.asObservable();
+  async function apply(event: AuthLoginEvent) {
+    switch (event.type) {
+      case "auth#login>failed":
+        return await applyLoginFailed(event);
+      case "auth#login>succeeded":
+        return await applyLoginSucceeded(event);
+      case "auth#signup>succeeded":
+        return await applySignupSucceded(event);
+    }
   }
 
-  public async init() {
-    await this.db.none(`
-    create schema if not exists auth
-  `);
-    await this.db.none(`
-    create table if not exists auth.events (
-      uuid uuid primary key,
-      data jsonb not null,
-      created_at timestamptz default now()
-    )`);
-    return;
+  function getEvents(): Observable<AuthLoginEvent> {
+    return events.asObservable();
   }
 
-  private async login(props: { cid: string; type: string }) {
+  const loginFailedType = "auth#login>failed" as const;
+  const loginSucceededType = "auth#login>succeeded" as const;
+  const signupSucceededType = "auth#signup>succeeded" as const;
+
+  async function processLogin(
+    cid: string,
+    props: unknown
+  ): Promise<AuthLoginEvent> {
     const validation = AuthLoginCommand.decode(props);
 
     if (validation.isLeft()) {
       const report = PathReporter.report(validation);
-      const result = {
-        cid: props.cid,
-        type: `${props.type}>failed`,
+
+      return {
+        cid,
+        type: loginFailedType,
         data: report
       };
-      this.log.next(result);
-      return Promise.reject(result);
     }
 
-    const hash = await bcrypt.hash(
-      validation.value.data.password,
-      this.saltRounds
+    const nicknameMatch = await db.oneOrNone(
+      `select data->'data'->>'password' as password from auth.events where data->>'type' = 'auth#signup>succeeded' and data->'data'->>'nickname' = $<nickname>`,
+      {
+        nickname: validation.value.data.nickname
+      }
     );
-    const event = {
-      ...validation.value,
+
+    if (!nicknameMatch) {
+      // @TODO: Validate minimum password strength.
+
+      return {
+        type: signupSucceededType,
+        cid,
+        data: {
+          nickname: validation.value.data.nickname,
+          password: await bcrypt.hash(
+            validation.value.data.password,
+            saltRounds
+          )
+        }
+      };
+    }
+
+    const storedPasswordHash = nicknameMatch.password;
+
+    if (typeof storedPasswordHash !== "string") {
+      return {
+        type: loginFailedType,
+        cid,
+        data: [
+          "Exception while trying to login. Stored password was not a string."
+        ]
+      };
+    }
+
+    const passwordMatched = await bcrypt.compare(
+      validation.value.data.password,
+      storedPasswordHash
+    );
+
+    if (!passwordMatched) {
+      return {
+        type: loginFailedType,
+        cid,
+        data: [`Could not login <${validation.value.data.nickname}>.`]
+      };
+    }
+
+    return {
+      type: loginSucceededType,
+      cid,
       data: {
-        ...validation.value.data,
-        password: hash
+        nickname: validation.value.data.nickname
       }
     };
+  }
 
-    await this.db.none(`insert into auth.events values ($<uuid>, $<data>)`, {
+  async function applyLoginFailed(event: AuthLoginFailed) {
+    await db.none(`insert into auth.events values ($<uuid>, $<data>)`, {
       uuid: uuid(),
       data: event
     });
 
-    this.log.next({
-      type: "server#handle_message>succeeded",
-      cid: event.cid,
-      data: "User created successfully."
-    });
+    events.next(event);
   }
+
+  async function applyLoginSucceeded(event: AuthLoginSucceeded) {
+    await db.none(`insert into auth.events values ($<uuid>, $<data>)`, {
+      uuid: uuid(),
+      data: event
+    });
+
+    events.next(event);
+  }
+
+  async function applySignupSucceded(event: AuthSignupSucceeded) {
+    await db.none(`insert into auth.events values ($<uuid>, $<data>)`, {
+      uuid: uuid(),
+      data: event
+    });
+
+    const eventWithoutPassword = {
+      ...event,
+      data: {
+        nickname: event.data.nickname
+      }
+    };
+
+    events.next(eventWithoutPassword);
+  }
+
+  return {
+    process,
+    apply,
+    getEvents
+  };
 }

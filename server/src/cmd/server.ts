@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { LoggerModel, ILoggerModel } from "../services/logger";
+import { createLogger, ILogger } from "../services/logger";
 import { Wss } from "../services/wss";
 import { Db } from "../services/db";
 import uuid from "uuid/v4";
@@ -7,30 +7,26 @@ import { Auth } from "../components/auth";
 import { PathReporter } from "io-ts/lib/PathReporter";
 import { Config } from "./types";
 
-const errorCodes = {
-  // TODO: Move out the error codes so it's easier to coordinate the numbers.
-};
-
 async function run() {
-  const { attach, logger } = setupLogger();
+  const logger = createLogger();
 
   setupExceptionHandlers(logger);
 
   const { DB_CONNECTION, AUTH_SALT_ROUNDS, WSS_PORT } = setupConfig(logger);
 
   const db = await Db({
-    attach,
+    attach: logger.attach,
     dbConnection: DB_CONNECTION
   });
 
   const auth = await Auth({
-    attach,
+    attach: logger.attach,
     db,
     authSaltRounds: AUTH_SALT_ROUNDS
   });
 
   const wss = Wss({
-    attach,
+    attach: logger.attach,
     wssPort: WSS_PORT
   });
 
@@ -40,7 +36,7 @@ async function run() {
       const [component] = m.type.split("#");
       switch (component) {
         case "auth":
-          return auth.processAction(m);
+          return auth.process(m);
         default:
           logger.log({
             type: "server#handle_message>failed",
@@ -58,39 +54,11 @@ async function run() {
       });
       process.exit(6);
     });
-
-  wss.init();
 }
 
 run();
 
-function setupLogger() {
-  const logger = new LoggerModel();
-  logger
-    .getLog()
-    .forEach(s => {
-      console.log(s);
-      console.log("\n");
-    })
-    .then(() => {
-      console.error(
-        "Error: logger.getLog() completed. It should stay alive at all times."
-      );
-      console.log("\n");
-      process.exit(1);
-    })
-    .catch(e => {
-      console.error(e);
-      console.log("\n");
-      process.exit(2);
-    });
-
-  const attach = logger.attach.bind(logger);
-
-  return { logger, attach };
-}
-
-function setupExceptionHandlers(logger: ILoggerModel) {
+function setupExceptionHandlers(logger: ILogger) {
   process.on("uncaughtException", e => {
     logger.log({
       cid: uuid(),
@@ -118,7 +86,7 @@ function setupExceptionHandlers(logger: ILoggerModel) {
   });
 }
 
-function setupConfig(logger: ILoggerModel): Config {
+function setupConfig(logger: ILogger): Config {
   dotenv.config();
 
   const validation = Config.decode(process.env);

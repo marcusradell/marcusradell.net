@@ -47,5 +47,6 @@ store
 
     machine[s.state].end.trigger("foo");
   })
+  .then(() => console.log("Stream ended."))
   .catch(e => console.error(e));
 ```

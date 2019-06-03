@@ -1,9 +1,10 @@
 import * as t from "io-ts";
+import { IntFromString } from "io-ts-types/lib/IntFromString";
 
 export const Config = t.type({
   DB_CONNECTION: t.string,
-  AUTH_SALT_ROUNDS: t.number,
-  WSS_PORT: t.number
+  AUTH_SALT_ROUNDS: IntFromString,
+  WSS_PORT: IntFromString
 });
 
 export type Config = t.TypeOf<typeof Config>;
