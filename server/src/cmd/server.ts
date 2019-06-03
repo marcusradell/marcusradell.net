@@ -32,11 +32,12 @@ async function run() {
 
   wss
     .getMessages()
-    .forEach(m => {
+    .forEach(async m => {
       const [component] = m.type.split("#");
       switch (component) {
         case "auth":
-          return auth.process(m);
+          const event = await auth.process(m);
+          auth.apply(event);
         default:
           logger.log({
             type: "server#handle_message>failed",
