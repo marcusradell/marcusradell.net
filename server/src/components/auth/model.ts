@@ -8,6 +8,7 @@ import {
   AuthLoginThrowed
 } from "./types";
 import { Subject, Observable } from "rxjs";
+import { PathReporter } from "io-ts/lib/PathReporter";
 import * as bcrypt from "bcrypt";
 import { IDatabase } from "pg-promise";
 import {
@@ -54,7 +55,8 @@ export async function createAuthModel(
     const validation = AuthLoginCommand.decode(command);
 
     if (validation.isLeft()) {
-      return authLoginInvalid(cid, validation);
+      const report = PathReporter.report(validation);
+      return authLoginInvalid(cid, report);
     }
 
     const { nickname, password } = validation.value.data;
