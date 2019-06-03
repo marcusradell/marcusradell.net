@@ -9,15 +9,22 @@ import {
   AuthLoginThrowed
 } from "./types";
 import { Subject, Observable } from "rxjs";
-import uuid from "uuid/v4";
 import * as bcrypt from "bcrypt";
 import { IDatabase } from "pg-promise";
+import {
+  authLoginInvalid,
+  authSignupSucceeded,
+  authLoginThrowed,
+  authLoginFailed,
+  authLoginSucceeded
+} from "./events";
+import { applyDb } from "./apply-db";
 
 export async function createAuthModel(
   db: IDatabase<unknown>,
   saltRounds: number
 ) {
-  const events: Subject<AuthLoginEvent> = new Subject<AuthLoginEvent>();
+  const events = new Subject<AuthLoginEvent>();
 
   async function process(command: AuthLoginCommand) {
     switch (command.type) {
@@ -28,8 +35,12 @@ export async function createAuthModel(
 
   async function apply(event: AuthLoginEvent) {
     switch (event.type) {
+      case "auth#login>invalid":
+        return await applyLoginInvalid(event);
       case "auth#login>failed":
         return await applyLoginFailed(event);
+      case "auth#login>throwed":
+        return await applyLoginThrowed(event);
       case "auth#login>succeeded":
         return await applyLoginSucceeded(event);
       case "auth#signup>succeeded":
@@ -37,31 +48,18 @@ export async function createAuthModel(
     }
   }
 
-  function getEvents(): Observable<AuthLoginEvent> {
-    return events.asObservable();
-  }
-
-  const loginInvalidType = "auth#login>invalid" as const;
-  const loginFailedType = "auth#login>failed" as const;
-  const loginThrowedType = "auth#login>throwed" as const;
-  const loginSucceededType = "auth#login>succeeded" as const;
-  const signupSucceededType = "auth#signup>succeeded" as const;
-
   async function processLogin(
     cid: string,
-    props: unknown
+    command: unknown
   ): Promise<AuthLoginEvent> {
-    const validation = AuthLoginCommand.decode(props);
+    const validation = AuthLoginCommand.decode(command);
 
     if (validation.isLeft()) {
       const report = PathReporter.report(validation);
-
-      return {
-        cid,
-        type: loginInvalidType,
-        data: report
-      };
+      return authLoginInvalid(cid, report);
     }
+
+    const { nickname, password } = validation.value.data;
 
     const nicknameMatch = await db.oneOrNone(
       `select data->'data'->>'password' as password from auth.events where data->>'type' = 'auth#signup>succeeded' and data->'data'->>'nickname' = $<nickname>`,
@@ -72,52 +70,24 @@ export async function createAuthModel(
 
     if (!nicknameMatch) {
       // @TODO: Validate minimum password strength.
-
-      return {
-        type: signupSucceededType,
+      return authSignupSucceeded(
         cid,
-        data: {
-          nickname: validation.value.data.nickname,
-          password: await bcrypt.hash(
-            validation.value.data.password,
-            saltRounds
-          )
-        }
-      };
+        validation.value.data.nickname,
+        await bcrypt.hash(password, saltRounds)
+      );
     }
 
     const storedPasswordHash = nicknameMatch.password;
 
     if (typeof storedPasswordHash !== "string") {
-      return {
-        type: loginThrowedType,
-        cid,
-        data: [
-          "Exception while trying to login. Stored password was not a string."
-        ]
-      };
+      return authLoginThrowed(cid);
     }
 
-    const passwordMatched = await bcrypt.compare(
-      validation.value.data.password,
-      storedPasswordHash
-    );
-
-    if (!passwordMatched) {
-      return {
-        type: loginFailedType,
-        cid,
-        data: { nickname: validation.value.data.nickname }
-      };
+    if (!bcrypt.compare(password, storedPasswordHash)) {
+      return authLoginFailed(cid, nickname);
     }
 
-    return {
-      type: loginSucceededType,
-      cid,
-      data: {
-        nickname: validation.value.data.nickname
-      }
-    };
+    return authLoginSucceeded(cid, nickname);
   }
 
   async function applyLoginInvalid(event: AuthLoginInvalid) {
@@ -125,36 +95,22 @@ export async function createAuthModel(
   }
 
   async function applyLoginFailed(event: AuthLoginFailed) {
-    await db.none(`insert into auth.events values ($<uuid>, $<data>)`, {
-      uuid: uuid(),
-      data: event
-    });
-
+    applyDb(db, event);
     events.next(event);
   }
 
   async function applyLoginThrowed(event: AuthLoginThrowed) {
-    await db.none(`insert into auth.events values ($<uuid>, $<data>)`, {
-      uuid: uuid(),
-      data: event
-    });
+    applyDb(db, event);
     events.next(event);
   }
 
   async function applyLoginSucceeded(event: AuthLoginSucceeded) {
-    await db.none(`insert into auth.events values ($<uuid>, $<data>)`, {
-      uuid: uuid(),
-      data: event
-    });
-
+    applyDb(db, event);
     events.next(event);
   }
 
   async function applySignupSucceded(event: AuthSignupSucceeded) {
-    await db.none(`insert into auth.events values ($<uuid>, $<data>)`, {
-      uuid: uuid(),
-      data: event
-    });
+    applyDb(db, event);
 
     const eventWithoutPassword = {
       ...event,
@@ -169,6 +125,6 @@ export async function createAuthModel(
   return {
     process,
     apply,
-    getEvents
+    events: events as Observable<AuthLoginEvent>
   };
 }

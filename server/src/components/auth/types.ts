@@ -27,7 +27,7 @@ export type AuthLoginSucceeded = {
 export type AuthSignupSucceeded = {
   type: "auth#signup>succeeded";
   cid: string;
-  data: { nickname: string; password?: string };
+  data: { nickname: string; passwordHash?: string };
 };
 
 export type AuthLoginEvent =

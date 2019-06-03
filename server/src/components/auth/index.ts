@@ -11,7 +11,7 @@ export async function Auth(args: {
   authSaltRounds: number;
 }) {
   const model = await createAuthModel(args.db, args.authSaltRounds);
-  args.attach(model.getEvents());
+  args.attach(model.events);
   await migrate(args.db);
 
   return model;
