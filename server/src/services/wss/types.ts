@@ -8,7 +8,7 @@ export const Message = t.intersection([
     clientCid: t.string
   }),
   t.partial({
-    data: t.any
+    data: t.unknown
   })
 ]);
 

@@ -3,7 +3,7 @@ import { Observable } from "rxjs";
 export type LoggerMessage = {
   type: string;
   cid: string;
-  data?: any;
+  data?: unknown;
 };
 
 export interface ILogger {

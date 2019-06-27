@@ -23,5 +23,5 @@ export type IDbLogMessage = DbInitSucceeded | DbInitFailed;
 export interface IDbModel {
   getLog: () => Observable<IDbLogMessage>;
   ensureConnection: () => Promise<void>;
-  getDb: () => IDatabase<any>;
+  getDb: () => IDatabase<unknown>;
 }

@@ -7,7 +7,7 @@ export * from "./types";
 
 export class DbModel implements IDbModel {
   private log: Subject<IDbLogMessage>;
-  private db: IDatabase<any>;
+  private db: IDatabase<unknown>;
 
   constructor(dbConnection: string) {
     this.log = new Subject<IDbLogMessage>();
