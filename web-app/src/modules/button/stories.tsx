@@ -3,6 +3,9 @@ import { createTheme } from "../../theme";
 import { createButton } from ".";
 import React from "react";
 
+// Bugfix: Needed to be toggled off or on depending on if CRA or storybook is running.
+window.React = React;
+
 const theme = createTheme();
 
 const primaryButton = createButton(theme, "primary", "primary");

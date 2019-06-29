@@ -1,8 +1,10 @@
 /** @jsx jsx */
-import { jsx, css, keyframes } from "@emotion/core";
-import React, { useState, FunctionComponent } from "react";
+import { jsx, css } from "@emotion/core";
+import React, { useState, useEffect, FunctionComponent } from "react";
 import { Color, Theme } from "../../theme";
-import { ButtonState } from "./types";
+import { ButtonState, ButtonStore, ButtonChart } from "./types";
+import { createRxm, useStore } from "../../rx-machine";
+import { createChart } from "./chart";
 export * from "./types";
 
 const colorScalar = 60;
@@ -38,20 +40,21 @@ const style = (theme: Theme, color: Color) =>
   });
 
 export function createButton(theme: Theme, color: Color, text: string) {
+  const { initialStore, chart } = createChart();
+  const rxm = createRxm<ButtonStore, ButtonChart>(chart, initialStore);
+
   const view: FunctionComponent = () => {
-    const [state, setState] = useState<ButtonState>("enabled");
+    const store = useStore(initialStore, rxm.store);
 
     return (
-      <button
-        disabled={state === "disabled" || color === "secondaryComplement"}
-        css={style(theme, color)}
-      >
+      <button disabled={store.state === "disabled"} css={style(theme, color)}>
         {text}
       </button>
     );
   };
 
   return {
+    rxm,
     view
   };
 }
