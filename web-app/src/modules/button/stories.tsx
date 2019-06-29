@@ -1,10 +1,7 @@
 import { storiesOf } from "@storybook/react";
-import { createTheme, Color } from "../../theme";
+import { createTheme } from "../../theme";
 import { createButton } from ".";
 import React from "react";
-
-// TODO: Fix storybook + CRA + emotion bug
-window.React = React;
 
 const theme = createTheme();
 
