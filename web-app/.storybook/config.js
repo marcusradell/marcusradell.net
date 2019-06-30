@@ -1,4 +1,7 @@
 import { configure } from "@storybook/react";
+import React from "react";
+
+window.React = React;
 
 const req = require.context("../src/modules", true, /stories\.tsx$/);
 

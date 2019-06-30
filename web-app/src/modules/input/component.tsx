@@ -19,7 +19,7 @@ export class InputComponent {
     errorMessage: ErrorMessage<Store>,
     private type: "text" | "password"
   ) {
-    this.rxm = createRxm<Store, Chart>(chart, initialStore);
+    this.rxm = createRxm<Chart, Store>(chart, initialStore);
 
     this.validationModule = createValidationModule(
       predicate,

@@ -1,15 +1,15 @@
-import { ButtonStore, ButtonChart } from "./types";
+import { Store, Chart } from "./types";
 
-const chart: ButtonChart = {
+const chart: Chart = {
   enabled: {
-    disable: (s: ButtonStore): ButtonStore => ({ state: "disabled" })
+    disable: (s: Store): Store => ({ state: "disabled" })
   },
   disabled: {
-    enable: (s: ButtonStore): ButtonStore => ({ state: "enabled" })
+    enable: (s: Store): Store => ({ state: "enabled" })
   }
 };
 
-const initialStore: ButtonStore = {
+const initialStore: Store = {
   state: "enabled"
 };
 

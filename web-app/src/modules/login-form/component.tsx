@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { Components } from "./types";
 import { InputComponent } from "../input/component";
-import { SubmitButtonComponent } from "../submit-button";
+import { SubmitButtonComponent } from "../_old_submit-button";
 import { combineLatest } from "rxjs";
 import { withLatestFrom, map } from "rxjs/operators";
 import { IWs } from "../../services/ws";

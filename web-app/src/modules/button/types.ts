@@ -1,14 +1,14 @@
-export type ButtonState = "enabled" | "disabled";
+export type State = "enabled" | "disabled";
 
-export type ButtonStore = {
-  state: ButtonState;
+export type Store = {
+  state: State;
 };
 
-export type ButtonChart = {
+export type Chart = {
   enabled: {
-    disable: (s: ButtonStore) => ButtonStore;
+    disable: (s: Store) => Store;
   };
   disabled: {
-    enable: (s: ButtonStore) => ButtonStore;
+    enable: (s: Store) => Store;
   };
 };
