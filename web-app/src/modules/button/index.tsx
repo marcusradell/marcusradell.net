@@ -12,7 +12,7 @@ const backgroundColorScalar = 60;
 
 const style = (theme: Theme, color: Color) =>
   css({
-    padding: "0 10",
+    padding: "0 10px",
     border: "0px solid",
     borderRadius: "5px",
     font: "inherit",
@@ -41,7 +41,7 @@ const style = (theme: Theme, color: Color) =>
 
 export function createButton(theme: Theme, color: Color, text: string) {
   const { initialStore, chart } = createChart();
-  const rxm = createRxm<ButtonStore, ButtonChart>(chart, initialStore);
+  const rxm = createRxm<ButtonChart, ButtonStore>(chart, initialStore);
 
   const view: FunctionComponent = () => {
     const store = useStore(initialStore, rxm.store);
