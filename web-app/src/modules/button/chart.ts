@@ -1,21 +1,32 @@
-import { Store, Chart } from "./types";
+import {
+  EnabledStore,
+  Chart,
+  Actions,
+  Store,
+  DisableReducer,
+  EnableReducer
+} from "./types";
+import { createAction } from "rx-machine";
 
 const chart: Chart = {
-  enabled: {
-    disable: (s: Store): Store => ({ state: "disabled" })
-  },
-  disabled: {
-    enable: (s: Store): Store => ({ state: "enabled" })
-  }
+  enabled: ["disable"],
+  disabled: ["enable"]
 };
 
-const initialStore: Store = {
+const initialStore: EnabledStore = {
   state: "enabled"
 };
 
-export function createChart() {
-  return {
-    chart,
-    initialStore
-  };
-}
+const disableReducer: DisableReducer = (s: Store) => ({ state: "disabled" });
+const enableReducer: EnableReducer = (s: Store) => ({ state: "enabled" });
+
+export const actions: Actions = {
+  disable: createAction(disableReducer),
+  enable: createAction(enableReducer)
+};
+
+export const createChart = () => ({
+  chart,
+  initialStore,
+  actions
+});

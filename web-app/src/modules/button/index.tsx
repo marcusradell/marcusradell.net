@@ -1,20 +1,24 @@
 /** @jsx jsx */
-import { jsx, css } from "@emotion/core";
-import React, { useState, useEffect, FunctionComponent } from "react";
+import { jsx } from "@emotion/core";
+import { FunctionComponent } from "react";
 import { Color, Theme } from "../../theme";
-import { State, Store, Chart } from "./types";
-import { createRxm, useStore } from "../../rx-machine";
+import { Store, Chart, Actions } from "./types";
+import { createStore, useStore } from "rx-machine";
 import { createChart } from "./chart";
 import { createCss } from "./css";
 export * from "./types";
 
 export function createButton(theme: Theme, color: Color, text: string) {
-  const { initialStore, chart } = createChart();
-  const rxm = createRxm<Chart, Store>(chart, initialStore);
+  const { chart, initialStore, actions } = createChart();
+  const storeStream = createStore<Chart, Store, Actions>(
+    chart,
+    initialStore,
+    actions
+  );
   const css = createCss(theme, color);
 
   const view: FunctionComponent = () => {
-    const store = useStore(initialStore, rxm.store);
+    const store = useStore(initialStore, storeStream);
 
     return (
       <button disabled={store.state === "disabled"} css={css}>
@@ -24,7 +28,7 @@ export function createButton(theme: Theme, color: Color, text: string) {
   };
 
   return {
-    rxm,
+    storeStream,
     view
   };
 }
