@@ -44,8 +44,8 @@ const fromToHsl = (h: number) => ({
 
 const black = (scale: number) =>
   createHsl({
-    from: { h: primaryHue, s: 5, l: 50 },
-    to: { h: primaryHue, s: 5, l: 10 },
+    from: { h: primaryHue, s: 5, l: 100 },
+    to: { h: primaryHue, s: 5, l: 0 },
     scale
   });
 

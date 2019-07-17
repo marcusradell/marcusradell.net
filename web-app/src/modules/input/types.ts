@@ -1,10 +1,18 @@
-export type Store = {
+import { CreateAction } from "rx-machine";
+
+export type EditingStore = {
   state: "editing";
-  ctx: string;
+  value: string;
 };
 
+export type Store = EditingStore;
+
 export type Chart = {
-  editing: {
-    edit: (s: Store, ctx: string) => Store;
-  };
+  editing: ["edit"];
+};
+
+export type EditReducer = (s: Store, value: string) => EditingStore;
+
+export type Actions = {
+  edit: CreateAction<EditReducer>;
 };
