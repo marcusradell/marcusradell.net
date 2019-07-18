@@ -3,7 +3,7 @@ import { Theme } from "../../theme";
 import { css } from "@emotion/core";
 
 const colorScalar = 100;
-const backgroundColorScalar = 0;
+const backgroundColorScalar = 30;
 
 export const createCss = (theme: Theme) => {
   return css({
