@@ -7,7 +7,7 @@ const theme = createTheme();
 
 const nicknameInput = createNicknameInput(theme);
 
-storiesOf("Inputs - Nickname", module).add("Default", () => (
+storiesOf("_old_ Inputs - Nickname", module).add("Default", () => (
   <>
     <div style={{ margin: "15px" }}>
       <nicknameInput.view />

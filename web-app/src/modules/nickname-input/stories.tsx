@@ -1,13 +1,13 @@
 import { storiesOf } from "@storybook/react";
 import { createTheme } from "../../theme";
-import { createInput } from ".";
+import { createNicknameInput } from ".";
 import React from "react";
 
 const theme = createTheme();
 
-const input = createInput(theme);
+const input = createNicknameInput(theme);
 
-storiesOf("Input", module).add("Default", () => (
+storiesOf("Nickname input", module).add("Default", () => (
   <>
     <div style={{ margin: "15px" }}>
       <input.view />

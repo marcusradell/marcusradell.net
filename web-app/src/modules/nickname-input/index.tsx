@@ -8,7 +8,7 @@ import { Theme } from "../../theme";
 import { createCss } from "./css";
 export * from "./types";
 
-export const createInput = (theme: Theme) => {
+export const createNicknameInput = (theme: Theme) => {
   const { initialStore, chart, actions } = createChart();
   const storeStream = createStore<Chart, Store, Actions>(
     chart,
