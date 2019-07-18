@@ -5,10 +5,12 @@ import { createChart } from "./chart";
 import { createStore, useStore } from "rx-machine";
 import { FunctionComponent, ChangeEvent } from "react";
 import { Theme } from "../../theme";
-import { createCss } from "./css";
+import { createInputCss } from "./input-css";
+import { createValidationCss } from "./validation-css";
 export * from "./types";
 
 const required = (s: string) => Boolean(s);
+const errorMessage = "Field is required.";
 
 export const createNicknameInput = (theme: Theme) => {
   const { initialStore, chart, actions } = createChart(required);
@@ -22,15 +24,25 @@ export const createNicknameInput = (theme: Theme) => {
     actions.edit.act(e.target.value);
   };
 
-  const css = createCss(theme);
+  const inputCss = createInputCss(theme);
+  const validationCss = createValidationCss(theme);
 
   const view: FunctionComponent = () => {
     const store = useStore<Store>(initialStore, storeStream);
 
     return (
       <>
-        <input css={css} type="text" value={store.value} onChange={onChange} />
-        {JSON.stringify(store)}
+        <div>
+          <input
+            css={inputCss}
+            type="text"
+            value={store.value}
+            onChange={onChange}
+          />
+        </div>
+        <div css={validationCss}>
+          {store.state === "invalid" ? errorMessage : ""}&nbsp;
+        </div>
       </>
     );
   };

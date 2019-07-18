@@ -1,12 +1,12 @@
 import { Theme } from "../../theme";
 import { css } from "@emotion/core";
 
-export function createCss(theme: Theme) {
+export function createInputCss(theme: Theme) {
   return css({
     padding: "10px",
     border: "none",
     borderTop: "5px solid",
-    borderBottom: `0px solid`,
+    borderBottom: "0px solid",
     borderColor: theme.colors.secondary(70),
     fontSize: "24px",
     fontFamily: "Lucida Console",
