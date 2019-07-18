@@ -1,28 +1,29 @@
 import { createAction } from "rx-machine";
-import { EditingStore, EditReducer, Store, Chart, Actions } from "./types";
+import { EditReducer, Store, Chart, Actions, InitialStore } from "./types";
+import { Predicate } from "../validation/types";
 
-const initialStore: EditingStore = {
-  state: "editing",
+const initialStore: InitialStore = {
+  state: "initial",
   value: ""
 };
 
 const chart: Chart = {
-  editing: ["edit"]
+  initial: ["edit"],
+  invalid: ["edit"],
+  valid: ["edit"]
 };
 
-const editReducer: EditReducer = (s: Store, value: string) => ({
-  ...s,
-  value
-});
+export const createChart = (predicate: Predicate) => {
+  const editReducer: EditReducer = (s: Store, value: string) =>
+    predicate(value) ? { state: "valid", value } : { state: "invalid", value };
 
-const actions: Actions = {
-  edit: createAction(editReducer)
-};
+  const actions: Actions = {
+    edit: createAction(editReducer)
+  };
 
-export const createChart = () => {
   return {
-    chart,
     initialStore,
-    actions
+    actions,
+    chart
   };
 };

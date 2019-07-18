@@ -8,8 +8,10 @@ import { Theme } from "../../theme";
 import { createCss } from "./css";
 export * from "./types";
 
+const required = (s: string) => Boolean(s);
+
 export const createNicknameInput = (theme: Theme) => {
-  const { initialStore, chart, actions } = createChart();
+  const { initialStore, chart, actions } = createChart(required);
   const storeStream = createStore<Chart, Store, Actions>(
     chart,
     initialStore,
@@ -28,6 +30,7 @@ export const createNicknameInput = (theme: Theme) => {
     return (
       <>
         <input css={css} type="text" value={store.value} onChange={onChange} />
+        {JSON.stringify(store)}
       </>
     );
   };
