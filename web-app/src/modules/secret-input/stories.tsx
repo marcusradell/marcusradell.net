@@ -1,16 +1,16 @@
 import { storiesOf } from "@storybook/react";
 import { createTheme } from "../../theme";
-import { createNicknameInput } from ".";
+import { createSecretKeyInput } from ".";
 import React from "react";
 
 const theme = createTheme();
 
-const nicknameInput = createNicknameInput(theme);
+const secretKeyInput = createSecretKeyInput(theme);
 
-storiesOf("_old_ Inputs - Nickname", module).add("Default", () => (
+storiesOf("Inputs - Secret key", module).add("Default", () => (
   <>
     <div style={{ margin: "15px" }}>
-      <nicknameInput.view />
+      <secretKeyInput.view />
     </div>
   </>
 ));
